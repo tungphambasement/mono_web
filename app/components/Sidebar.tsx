@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, Briefcase, FolderGit2, User } from "lucide-react";
+import { House, Briefcase, FolderGit2, User, Feather, Package, Package2, Cpu } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 const topLinks: { href: string; label: string; Icon: LucideIcon }[] = [
   { href: "/", label: "Home", Icon: House },
+  { href: "/mono-demo", label: "Mono Demo", Icon: Cpu },
+  { href: "/blogs", label: "Blog", Icon: Feather },
 ];
 
 const aboutMeSubLinks: { href: string; label: string; Icon: LucideIcon }[] = [
