@@ -74,6 +74,9 @@ export default function Experiences() {
                 <p className="text-base text-zinc-500 dark:text-zinc-400 leading-relaxed">
                   {exp.description}
                 </p>
+                {isComingSoon && (
+                  <div className="mb-2" />
+                )}
               </div>
             </li>
           );
