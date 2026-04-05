@@ -5,7 +5,7 @@ import { KeyboardEvent, ReactNode, useCallback, useEffect, useRef, useState } fr
 
 const SCRIPT_COMMANDS = [
   "locate --engineer",
-  "physics.play()",
+  "boot --desktop",
 ];
 
 // Styled segments for each script command's output typing animation.
@@ -13,9 +13,9 @@ const SCRIPT_COMMANDS = [
 type OutputSegment = { text: string; className: string };
 const SCRIPT_OUTPUT_SEGMENTS: OutputSegment[][] = [
   // locate --engineer
-  [{ text: "Tung D. Pham found at /rochester/software-engineer", className: "text-zinc-300" }],
-  // physics.play()
-  [{ text: "Launching physics simulation…", className: "text-zinc-400" }],
+  [{ text: "Tung D. Pham found at /rochester/swe", className: "text-zinc-300" }],
+  // boot --desktop
+  [{ text: "Booting desktop environment…", className: "text-zinc-400" }],
 ];
 
 const PROMPT_SPEED = 60;   // ms per character
@@ -25,6 +25,7 @@ const PAUSE_AFTER_CMD = 300;  // ms after output appears, before next command
 
 const COMMAND_HELP: Record<string, string> = {
   help: "show available commands",
+  boot: "boot the desktop environment",
   about: "who I am",
   skills: "tech stack & tools",
   experience: "work history",
@@ -87,7 +88,7 @@ function renderCommandOutput(
     }
 
     case "locate":
-      return <div className="text-zinc-300">Tung D. Pham found at /rochester/software-engineer</div>;
+      return <div className="text-zinc-300">Tung D. Pham found at /rochester/swe</div>;
 
     case "about":
       return (
@@ -97,8 +98,7 @@ function renderCommandOutput(
               ["Name", "Tung D. Pham"],
               ["School", "University of Rochester — B.S. Computer Science"],
               ["Grad", "May 2028"],
-              ["Focus", "Systems · Backend · Distributed computing"],
-              ["Status", "🟢 Actively seeking SWE intern roles"],
+              ["Focus", "Systems · Backend · HPC"],
             ] as [string, string][]
           ).map(([k, v]) => (
             <div key={k}>
@@ -321,9 +321,11 @@ interface TerminalProps {
   onDragHandleMouseDown: (e: React.MouseEvent) => void;
   isDragging: boolean;
   externalCommands?: Record<string, ExternalCommandDef>;
+  onClose?: () => void;
+  onMinimize?: () => void;
 }
 
-export default function Terminal({ height, onDragHandleMouseDown, isDragging, externalCommands = {} }: TerminalProps) {
+export default function Terminal({ height, onDragHandleMouseDown, isDragging, externalCommands = {}, onClose, onMinimize }: TerminalProps) {
   const router = useRouter();
   const nav = useCallback((p: string) => router.push(p), [router]);
 
@@ -347,6 +349,7 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging, ex
 
   const isInteractive = scriptPhase === "done";
 
+  /* Intro script effect */
   useEffect(() => {
     if (scriptPhase === "done") return;
 
@@ -504,8 +507,16 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging, ex
         className={`flex items-center gap-1.5 px-4 py-3 bg-zinc-900 border-b border-zinc-800 select-none ${isDragging ? "cursor-grabbing" : "cursor-default"}`}
         onMouseDown={onDragHandleMouseDown}
       >
-        <span className="w-3 h-3 rounded-full bg-red-500" />
-        <span className="w-3 h-3 rounded-full bg-yellow-500" />
+        <button
+          onClick={onClose}
+          className="w-3 h-3 rounded-full bg-red-500 hover:brightness-75 transition-[filter] focus:outline-none"
+          aria-label="Close terminal"
+        />
+        <button
+          onClick={onMinimize}
+          className="w-3 h-3 rounded-full bg-yellow-500 hover:brightness-75 transition-[filter] focus:outline-none"
+          aria-label="Minimize terminal"
+        />
         <span className="w-3 h-3 rounded-full bg-green-500" />
         <span className="ml-2 text-xs text-zinc-500 font-mono select-none">tung@portfolio:~</span>
       </div>

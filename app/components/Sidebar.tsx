@@ -81,20 +81,22 @@ export default function Sidebar() {
             <div className="relative ml-2.5 mt-1">
               {aboutMeSubLinks.map(({ href, label }, idx) => {
                 const active = pathname === href;
+                const isFirst = idx === 0;
                 const isLast = idx === aboutMeSubLinks.length - 1;
 
                 return (
                   <div
                     className={`relative transition-all duration-300 ${isAboutMeActive
                       ? "opacity-100"
-                      : "opacity-0 group-hover/about:opacity-100 group-hover/about:translate-y-0"
+                      : "opacity-0 group-hover/about:opacity-100"
                       }`}
-                    style={{ transitionDelay: isAboutMeActive ? "0ms" : `${idx * 50}ms` }}
+                    style={{ transitionDelay: isAboutMeActive ? "0ms" : `${idx * 80}ms` }}
                     key={href}
                   >
-                    {!isLast && (
-                      <div className="absolute -left-px h-full border-l border-zinc-200 dark:border-zinc-800" />
+                    {!isFirst && (
+                      <div className="absolute -left-px -top-full  h-full border-l border-zinc-200 dark:border-zinc-800" />
                     )}
+
                     <Link
                       href={href}
                       className={`group relative flex items-center py-2.5 pl-6.5 text-sm transition-colors duration-200 ${active
