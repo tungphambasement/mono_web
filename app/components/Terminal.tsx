@@ -445,7 +445,7 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging }: 
       {/* Body */}
       <div
         ref={bodyRef}
-        className="bg-zinc-950 px-5 py-5 font-mono text-sm overflow-y-auto cursor-text"
+        className="bg-zinc-950 px-5 py-5 font-mono text-sm overflow-y-auto cursor-text styled-scrollbar"
         style={{ height }}
         onClick={() => isInteractive && inputRef.current?.focus()}
       >

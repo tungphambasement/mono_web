@@ -8,7 +8,7 @@ import type { LucideIcon } from "lucide-react";
 const topLinks: { href: string; label: string; Icon: LucideIcon }[] = [
   { href: "/", label: "Home", Icon: House },
   { href: "/mono-demo", label: "Mono Demo", Icon: Cpu },
-  { href: "/blogs", label: "Blog", Icon: Feather },
+  { href: "/blogs", label: "Blogs", Icon: Feather },
 ];
 
 const aboutMeSubLinks: { href: string; label: string; Icon: LucideIcon }[] = [
