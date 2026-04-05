@@ -1,10 +1,10 @@
 "use client";
 
 import { RefObject, useEffect, useLayoutEffect, useRef, useState } from "react";
-import Terminal, { ExternalCommandDef } from "./Terminal";
+import Terminal, { CommandDef } from "./Terminal";
 
 interface DraggableTerminalProps {
-  externalCommands?: Record<string, ExternalCommandDef>;
+  externalCommands?: CommandDef[];
   screenRef: RefObject<HTMLDivElement | null>;
   onClose: () => void;
   onMinimize: () => void;

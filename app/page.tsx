@@ -72,13 +72,14 @@ export default function Home() {
                 screenRef={screenRef}
                 onClose={() => setTerminalState("closed")}
                 onMinimize={() => setTerminalState("minimized")}
-                externalCommands={{
-                  boot: {
+                externalCommands={[
+                  {
+                    key: "boot",
                     description: "boot the desktop environment",
-                    output: <span className="text-zinc-400">Booting desktop environment…</span>,
+                    output: () => <span className="text-zinc-400">Booting desktop environment…</span>,
                     action: () => setDesktopBooted(true),
                   },
-                }}
+                ]}
               />
             </div>
           )}
