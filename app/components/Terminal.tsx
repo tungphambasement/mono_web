@@ -41,7 +41,7 @@ const SCRIPT_OUTPUT_SEGMENTS: OutputSegment[][] = [
 const PROMPT_SPEED = 60;
 const OUTPUT_SPEED = 30;
 const PAUSE_AFTER_TYPE = 150;
-const PAUSE_AFTER_CMD = 300;
+const PAUSE_AFTER_CMD = 200;
 
 //  Command Definitions 
 
@@ -305,6 +305,7 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging, ex
 
   const inputRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const [isFocused, setIsFocused] = useState(false);
 
   const isInteractive = scriptPhase === "done";
 
@@ -594,6 +595,8 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging, ex
                   value={currentInput}
                   onChange={(e) => { setCurrentInput(e.target.value); setCmdHistoryIdx(-1); }}
                   onKeyDown={handleKeyDown}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
                   className="absolute inset-0 opacity-0 w-full h-full"
                   autoComplete="off"
                   autoCorrect="off"
@@ -603,7 +606,7 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging, ex
                 />
               )}
               <span className="text-zinc-300 pointer-events-none break-all">{currentInput}</span>
-              <span className="text-zinc-300 animate-blink pointer-events-none">█</span>
+              <span className={`text-zinc-300 pointer-events-none ${isFocused ? "animate-blink" : "opacity-0"}`}>█</span>
             </div>
           </div>
         )}

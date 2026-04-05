@@ -100,7 +100,7 @@ export default function PhysicsOverlay() {
     <div
       ref={outerRef}
       className="absolute inset-0 z-0 overflow-hidden"
-      style={{ background: "black" }}
+      style={{ background: "transparent" }}
     >
       {/* Canvas mount point */}
       <div ref={canvasContainerRef} className="w-full h-full pointer-events-none" />
