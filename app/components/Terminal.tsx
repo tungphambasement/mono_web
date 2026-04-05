@@ -29,13 +29,13 @@ export type CommandDef = {
 //  Constants & Config 
 
 const SCRIPT_COMMANDS = [
-  "locate --engineer",
   "boot --desktop",
+  "locate --engineer",
 ];
 
 const SCRIPT_OUTPUT_SEGMENTS: OutputSegment[][] = [
-  [{ text: "Tung D. Pham found at /rochester/swe", className: "text-zinc-300" }],
   [{ text: "Booting desktop environment…", className: "text-zinc-400" }],
+  [{ text: "Tung D. Pham found at /rochester/swe", className: "text-zinc-300" }],
 ];
 
 const PROMPT_SPEED = 60;
@@ -522,21 +522,41 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging, ex
   return (
     <div className="rounded-lg border border-zinc-800 overflow-hidden shadow-lg relative">
       <div
-        className={`flex items-center gap-1.5 px-4 py-3 bg-zinc-900 border-b border-zinc-800 select-none ${isDragging ? "cursor-grabbing" : "cursor-default"}`}
+        className={`flex items-center gap-2 px-4 py-2 bg-zinc-900 border-b border-zinc-800 select-none group ${isDragging ? "cursor-grabbing" : "cursor-default"}`}
         onMouseDown={onDragHandleMouseDown}
       >
         <button
           onClick={onClose}
-          className="w-3 h-3 rounded-full bg-red-500 hover:brightness-75 transition-[filter] focus:outline-none"
-          aria-label="Close terminal"
-        />
+          className="w-3 h-3 rounded-full bg-[#ff5f56] hover:bg-[#bf4942] transition-colors flex items-center justify-center group/btn hover:cursor-pointer"
+          aria-label="Close"
+        >
+          <svg className="w-1.5 h-1.5 opacity-0 group-hover:opacity-100 transition-opacity -translate-x-[0.5px]" viewBox="0 0 6 6">
+            <path d="M1.5 1.5L4.5 4.5M1.5 4.5L4.5 1.5" stroke="#4c0000" strokeWidth="1.2" strokeLinecap="round" />
+          </svg>
+        </button>
+
         <button
           onClick={onMinimize}
-          className="w-3 h-3 rounded-full bg-yellow-500 hover:brightness-75 transition-[filter] focus:outline-none"
-          aria-label="Minimize terminal"
-        />
-        <span className="w-3 h-3 rounded-full bg-green-500" />
-        <span className="ml-2 text-xs text-zinc-500 font-mono select-none">tung@portfolio:~</span>
+          className="w-3 h-3 rounded-full bg-[#ffbd2e] hover:bg-[#bf8e22] transition-colors flex items-center justify-center hover:cursor-pointer"
+          aria-label="Minimize"
+        >
+          <svg className="w-1.5 h-1.5 opacity-0 group-hover:opacity-100 transition-opacity -translate-x-[0.5px]" viewBox="0 0 6 6">
+            <path d="M1 3H5" stroke="#995700" strokeWidth="1.2" strokeLinecap="round" />
+          </svg>
+        </button>
+
+        <button
+          className="w-3 h-3 rounded-full bg-[#27c93f] hover:bg-[#1d962f] transition-colors flex items-center justify-center hover:cursor-pointer"
+          aria-label="Maximize"
+        >
+          <svg className="w-1.5 h-1.5 opacity-0 group-hover:opacity-100 transition-opacity -translate-x-[0.5px]" viewBox="0 0 6 6">
+            <path d="M3 1V5M1 3H5" stroke="#006500" strokeWidth="1.2" strokeLinecap="round" />
+          </svg>
+        </button>
+
+        <span className="ml-2 text-[11px] text-zinc-500 font-medium font-sans tracking-wide">
+          tung@portfolio:~
+        </span>
       </div>
 
       <div
@@ -573,7 +593,7 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging, ex
                   return <span key={i} className={seg.className}>{visible}</span>;
                 });
               })()}
-              <span className="text-zinc-300 animate-blink">█</span>
+              <span className="text-zinc-300 animate-blink text-xs">█</span>
             </div>
           </div>
         )}
@@ -606,7 +626,7 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging, ex
                 />
               )}
               <span className="text-zinc-300 pointer-events-none break-all">{currentInput}</span>
-              <span className={`text-zinc-300 pointer-events-none ${isFocused ? "animate-blink" : "opacity-0"}`}>█</span>
+              <span className={`text-zinc-300 pointer-events-none text-xs ${isFocused ? "animate-blink" : "opacity-0"}`}>█</span>
             </div>
           </div>
         )}

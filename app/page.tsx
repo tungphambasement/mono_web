@@ -9,7 +9,6 @@ import {
   TerminalSquare,
 } from "lucide-react";
 import DraggableTerminal from "./components/DraggableTerminal";
-import DesktopIcon from "./components/DesktopIcon";
 
 const PhysicsOverlay = dynamic(() => import("./components/PhysicsOverlay"), { ssr: false });
 
@@ -24,32 +23,6 @@ export default function Home() {
     <div className="relative flex-1 flex flex-col items-center" ref={screenRef}>
       {/* Physics wallpaper */}
       {desktopBooted && <PhysicsOverlay />}
-      {/* Desktop icons */}
-      {desktopBooted && (
-        <div className="absolute top-5 left-5 z-10 flex flex-col gap-4 my-8">
-          <DesktopIcon
-            icon={<TerminalSquare size={22} className="text-green-400" />}
-            label="Terminal"
-            active={terminalState === "visible"}
-            onClick={() => setTerminalState("visible")}
-          />
-          <DesktopIcon
-            icon={<FolderOpen size={22} className="text-blue-300" />}
-            label="Files"
-            onClick={() => { }}
-          />
-          <DesktopIcon
-            icon={<Globe size={22} className="text-sky-400" />}
-            label="Browser"
-            onClick={() => { }}
-          />
-          <DesktopIcon
-            icon={<Settings size={22} className="text-zinc-300" />}
-            label="Settings"
-            onClick={() => { }}
-          />
-        </div>
-      )}
 
       {/* Draggable terminal — hidden (not unmounted) when minimized */}
       {terminalState !== "closed" && (

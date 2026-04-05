@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Sidebar from "./components/Sidebar";
 import Navbar from "./components/Navbar";
 
 const geistSans = Geist({
@@ -37,9 +36,6 @@ export default function RootLayout({
             <main className="flex-1 w-full mx-auto flex flex-col">
               {children}
             </main>
-            <footer className="border-t border-zinc-200 dark:border-zinc-800 py-6 text-center text-xs text-zinc-400 dark:text-zinc-600">
-              © {new Date().getFullYear()} Tung D. Pham
-            </footer>
           </div>
         </div>
       </body>

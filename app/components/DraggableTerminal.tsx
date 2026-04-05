@@ -31,7 +31,7 @@ export default function DraggableTerminal({ externalCommands, screenRef, onClose
     const w = Math.min(560, rect.width - 40);
     setSize((s) => ({ ...s, width: w }));
     setPos({
-      x: rect.left + rect.width * 0.1,
+      x: rect.left + rect.width * 0.2,
       y: rect.top + rect.height * 0.1,
     });
   }, [screenRef]);

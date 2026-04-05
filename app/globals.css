@@ -71,12 +71,10 @@
   }
 }
 
-/* 1. Prevent Layout Shift globally */
 html {
   scrollbar-gutter: stable;
 }
 
-/* 2. Standard properties for Firefox */
 html {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
@@ -84,16 +82,12 @@ html {
 }
 
 html:hover {
-  /* Use a subtle grey that works in both light/dark modes */
   scrollbar-color: rgba(128, 128, 128, 0.2) transparent;
 }
 
-/* 3. Webkit properties for Chrome, Safari, and Edge */
 html::-webkit-scrollbar {
   width: 6px;
-  /* Vertical scrollbar width */
   height: 6px;
-  /* Horizontal scrollbar height */
 }
 
 html::-webkit-scrollbar-track {

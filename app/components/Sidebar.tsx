@@ -1,3 +1,6 @@
+/**
+ * @deprecated This component is no longer used and will be removed in the future. The new design focuses on a more content-centric layout without a persistent sidebar.
+ */
 "use client";
 
 import Link from "next/link";

@@ -23,12 +23,12 @@ export default function Navbar() {
   const isAboutMeActive = pathname === "/about";
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background animate-fade-in">
+    <header className="sticky top-0 z-40 w-full bg-background animate-fade-in">
       <div className="mx-auto flex w-[90%] items-center justify-between px-6 py-4">
         {/* Brand */}
         <Link
           href="/"
-          className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100 animate-slide-up"
+          className="text-lg font-sans tracking-tight text-zinc-900 dark:text-zinc-100 animate-slide-up"
           style={{ animationDelay: "80ms" }}
         >
           Tung D. Pham
@@ -51,11 +51,14 @@ export default function Navbar() {
                 <Icon size={14} className="shrink-0" />
                 <span className="relative inline-block">
                   {label}
-                  <span className="absolute -bottom-0.5 left-0 h-px w-full bg-current transition-transform duration-300 scale-x-0 origin-right group-hover:scale-x-100 group-hover:origin-left" />
+                  <span className="absolute -bottom-0.5 left-0 h-px w-full bg-current transition-transform duration-200 scale-x-0 origin-right group-hover:scale-x-100 group-hover:origin-left" />
                 </span>
               </Link>
             );
           })}
+
+          <div className="absolute left-0 top-full h-2 w-full pointer-events-none bg-linear-to-b from-foreground/5 to-background/5 dark:from-background" />
+
 
           {/* About Me dropdown */}
           <div
@@ -82,8 +85,8 @@ export default function Navbar() {
             </button>
 
             {/* Dropdown */}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 pointer-events-none group-hover/about:opacity-100 group-hover/about:pointer-events-auto transition-all duration-200 translate-y-1 group-hover/about:translate-y-0">
-              <div className="min-w-44 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md shadow-lg py-1 overflow-hidden">
+            <div className="absolute z-50 top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 pointer-events-none group-hover/about:opacity-100 group-hover/about:pointer-events-auto transition-all duration-200 translate-y-1 group-hover/about:translate-y-0">
+              <div className="min-w-44 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-950/90 py-1.5 overflow-hidden">
                 {aboutMeSubLinks.map(({ href, label, Icon }) => {
                   const tabParam = new URL(href, "http://x").searchParams.get("tab");
                   const active = pathname === "/about" && searchParams.get("tab") === tabParam;
@@ -92,14 +95,14 @@ export default function Navbar() {
                       key={href}
                       href={href}
                       className={`group flex items-center gap-2 px-3 py-2 text-sm transition-colors duration-150 ${active
-                        ? "text-zinc-900 dark:text-zinc-100 font-medium"
-                        : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                        ? "text-zinc-900 dark:text-zinc-100 font-medium bg-zinc-50 dark:bg-zinc-900"
+                        : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 dark:hover:text-zinc-100 dark:hover:bg-zinc-900"
                         }`}
                     >
                       <Icon size={13} className="shrink-0" />
                       <span className="relative inline-block">
                         {label}
-                        <span className="absolute -bottom-0.5 left-0 h-px w-full bg-current transition-transform duration-300 scale-x-0 origin-right group-hover:scale-x-100 group-hover:origin-left" />
+                        <span className="absolute -bottom-0.5 left-0 h-px w-full bg-current transition-transform duration-200 scale-x-0 origin-right group-hover:scale-x-100 group-hover:origin-left" />
                       </span>
                     </Link>
                   );
@@ -113,7 +116,7 @@ export default function Navbar() {
                 >
                   <span className="relative inline-block">
                     GitHub
-                    <span className="absolute -bottom-0.5 left-0 h-px w-full bg-current transition-transform duration-300 scale-x-0 origin-right group-hover:scale-x-100 group-hover:origin-left" />
+                    <span className="absolute -bottom-0.5 left-0 h-px w-full bg-current transition-transform duration-200 scale-x-0 origin-right group-hover:scale-x-100 group-hover:origin-left" />
                   </span>
                 </a>
                 <a
@@ -122,7 +125,7 @@ export default function Navbar() {
                 >
                   <span className="relative inline-block">
                     LinkedIn
-                    <span className="absolute -bottom-0.5 left-0 h-px w-full bg-current transition-transform duration-300 scale-x-0 origin-right group-hover:scale-x-100 group-hover:origin-left" />
+                    <span className="absolute -bottom-0.5 left-0 h-px w-full bg-current transition-transform duration-200 scale-x-0 origin-right group-hover:scale-x-100 group-hover:origin-left" />
                   </span>
                 </a>
               </div>
