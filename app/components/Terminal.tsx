@@ -5,12 +5,25 @@ import { KeyboardEvent, ReactNode, useCallback, useEffect, useRef, useState } fr
 
 const SCRIPT_COMMANDS = [
   "locate --engineer",
-  "skills --list",
-  "contact --email",
+  "languages --list",
+];
+
+// Styled segments for each script command's output typing animation.
+// Each segment has the text and the className that matches the real rendered output.
+type OutputSegment = { text: string; className: string };
+const SCRIPT_OUTPUT_SEGMENTS: OutputSegment[][] = [
+  // locate --engineer
+  [{ text: "Tung D. Pham found at /rochester/software-engineer", className: "text-zinc-300" }],
+  // languages --list
+  [
+    { text: "Languages", className: "text-zinc-500" },
+    { text: "  ", className: "" },
+    { text: "C++ · TypeScript · Java · Python · Rust", className: "text-zinc-200" },
+  ],
 ];
 
 const PROMPT_SPEED = 60;   // ms per character
-const PAUSE_AFTER_TYPE = 50;  // ms after fully typed, before "Enter"
+const PAUSE_AFTER_TYPE = 150;  // ms after fully typed, before "Enter"
 const PAUSE_AFTER_CMD = 300;  // ms after output appears, before next command
 
 const COMMAND_HELP: Record<string, string> = {
@@ -79,18 +92,16 @@ function renderCommandOutput(
         </div>
       );
 
-    case "skills":
+    case "languages":
       return (
         <div className="space-y-0.5">
           {(
             [
               ["Languages", "C++ · TypeScript · Java · Python · Rust"],
-              ["Backend", "Node.js · FastAPI · PostgreSQL · Redis"],
-              ["DevOps", "Git · Neovim · tmux · Docker · Linux · Nginx"],
             ] as [string, string][]
           ).map(([k, v]) => (
             <div key={k}>
-              <span className="text-zinc-500 inline-block w-24">{k}</span>
+              <span className="text-zinc-500">{k} </span> {/* with a space */}
               <span className="text-zinc-200">{v}</span>
             </div>
           ))}
@@ -306,8 +317,12 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging }: 
 
   // script (intro) state
   const [scriptIdx, setScriptIdx] = useState(0);
-  const [scriptPhase, setScriptPhase] = useState<"typing" | "waiting" | "done">("typing");
+  const [scriptPhase, setScriptPhase] = useState<"typing" | "waiting" | "outputTyping" | "done">("typing");
   const scriptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingPromptRef = useRef("");
+  const pendingSegmentsRef = useRef<OutputSegment[]>([]);
+  const pendingNodeRef = useRef<ReactNode>(null);
+  const [typedOutputLen, setTypedOutputLen] = useState(0);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -340,20 +355,38 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging }: 
       }
     } else if (scriptPhase === "waiting") {
       scriptTimerRef.current = setTimeout(() => {
-        // execute through the real handler
         const trimmed = currentInput.trim();
         const [c = "", ...args] = trimmed.split(/\s+/);
-        const output = renderCommandOutput(c.toLowerCase(), args, nav);
-        setHistory((prev) => [...prev, { prompt: trimmed, output }]);
-        setCmdHistory((prev) => [trimmed, ...prev]);
+        pendingPromptRef.current = trimmed;
+        pendingSegmentsRef.current = SCRIPT_OUTPUT_SEGMENTS[scriptIdx] ?? [];
+        pendingNodeRef.current = renderCommandOutput(c.toLowerCase(), args, nav);
         setCurrentInput("");
-        setScriptIdx((i) => i + 1);
-        setScriptPhase("typing");
+        setTypedOutputLen(0);
+        setScriptPhase("outputTyping");
       }, PAUSE_AFTER_CMD);
+    } else if (scriptPhase === "outputTyping") {
+      const totalLen = pendingSegmentsRef.current.reduce((s, seg) => s + seg.text.length, 0);
+      if (typedOutputLen < totalLen) {
+        scriptTimerRef.current = setTimeout(
+          () => setTypedOutputLen((n) => n + 1),
+          PROMPT_SPEED,
+        );
+      } else {
+        scriptTimerRef.current = setTimeout(() => {
+          setHistory((prev) => [
+            ...prev,
+            { prompt: pendingPromptRef.current, output: pendingNodeRef.current },
+          ]);
+          setCmdHistory((prev) => [pendingPromptRef.current, ...prev]);
+          setTypedOutputLen(0);
+          setScriptIdx((i) => i + 1);
+          setScriptPhase("typing");
+        }, PAUSE_AFTER_CMD);
+      }
     }
 
     return () => { if (scriptTimerRef.current) clearTimeout(scriptTimerRef.current); };
-  }, [scriptPhase, scriptIdx, currentInput, nav]);
+  }, [scriptPhase, scriptIdx, currentInput, nav, typedOutputLen]);
 
   useEffect(() => {
     if (isInteractive) inputRef.current?.focus();
@@ -361,7 +394,7 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging }: 
 
   useEffect(() => {
     if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
-  }, [history, currentInput, height]);
+  }, [history, height]);
 
   function executeCommand(raw: string) {
     const trimmed = raw.trim();
@@ -442,15 +475,15 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging }: 
       {/* Body */}
       <div
         ref={bodyRef}
-        className="bg-zinc-950 px-5 py-5 font-mono text-sm overflow-y-auto cursor-text styled-scrollbar"
+        className="bg-zinc-950 px-5 py-5 font-mono text-sm overflow-y-scroll cursor-text styled-scrollbar"
         style={{ height }}
         onClick={() => isInteractive && inputRef.current?.focus()}
       >
         {/* All executed commands — script replay and interactive unified */}
         {history.map((entry, i) => (
           <div key={i} className="mb-3">
-            <div>
-              <span className="text-zinc-500 select-none">{">"}  </span>
+            <div className="flex items-start">
+              <span className="text-zinc-500 select-none mr-1.5 shrink-0">{">"}</span>
               <span className="text-zinc-300">{entry.prompt}</span>
             </div>
             {entry.output != null && (
@@ -458,6 +491,28 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging }: 
             )}
           </div>
         ))}
+
+        {/* Output being typed during script phase */}
+        {scriptPhase === "outputTyping" && (
+          <div className="mb-3">
+            <div className="flex items-start">
+              <span className="text-zinc-500 select-none mr-1.5 shrink-0">{">"}</span>
+              <span className="text-zinc-300">{pendingPromptRef.current}</span>
+            </div>
+            <div className="pl-4 mt-1">
+              {(() => {
+                let remaining = typedOutputLen;
+                return pendingSegmentsRef.current.map((seg, i) => {
+                  if (remaining <= 0) return null;
+                  const visible = seg.text.slice(0, remaining);
+                  remaining -= seg.text.length;
+                  return <span key={i} className={seg.className}>{visible}</span>;
+                });
+              })()}
+              <span className="text-zinc-300 animate-blink">█</span>
+            </div>
+          </div>
+        )}
 
         {/* Divider once script ends */}
         {isInteractive && (
@@ -467,7 +522,7 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging }: 
         )}
 
         {/* Live input line */}
-        <div className="flex items-start mt-1">
+        {scriptPhase !== "outputTyping" && <div className="flex items-start mt-1">
           <span className="text-zinc-500 select-none mr-1.5 shrink-0">{">"}</span>
           <div className="relative flex-1 min-w-0">
             {isInteractive && (
@@ -488,7 +543,7 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging }: 
             <span className="text-zinc-300 pointer-events-none break-all">{currentInput}</span>
             <span className="text-zinc-300 animate-blink pointer-events-none">█</span>
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   );
