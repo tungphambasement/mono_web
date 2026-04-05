@@ -57,7 +57,7 @@ function renderCommandOutput(
       );
 
     case "locate":
-      return <div className="text-zinc-300">Tung D. Pham found at /hanoi/software-engineer</div>;
+      return <div className="text-zinc-300">Tung D. Pham found at /rochester/software-engineer</div>;
 
     case "about":
       return (
@@ -66,9 +66,9 @@ function renderCommandOutput(
             [
               ["Name", "Tung D. Pham"],
               ["School", "University of Rochester — B.S. Computer Science"],
-              ["Grad", "May 2026"],
+              ["Grad", "May 2028"],
               ["Focus", "Systems · Backend · Distributed computing"],
-              ["Status", "🟢 Actively seeking full-time SWE roles"],
+              ["Status", "🟢 Actively seeking SWE intern roles"],
             ] as [string, string][]
           ).map(([k, v]) => (
             <div key={k}>
@@ -85,7 +85,7 @@ function renderCommandOutput(
           {(
             [
               ["Languages", "C++ · TypeScript · Java · Python · Rust"],
-              ["Backend", "Node.js · Fastify · gRPC · REST · PostgreSQL · Redis"],
+              ["Backend", "Node.js · FastAPI · PostgreSQL · Redis"],
               ["DevOps", "Git · Neovim · tmux · Docker · Linux · Nginx"],
             ] as [string, string][]
           ).map(([k, v]) => (
@@ -134,8 +134,6 @@ function renderCommandOutput(
           {(
             [
               ["Email", "mailto:tungphamdoan2509@gmail.com", "tungphamdoan2509@gmail.com"],
-              ["GitHub", "https://github.com", "github.com"],
-              ["LinkedIn", "https://linkedin.com/in/tungpd", "linkedin.com/in/tungpd"],
             ] as [string, string, string][]
           ).map(([label, href, display]) => (
             <div key={label}>
@@ -431,7 +429,6 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging }: 
 
   return (
     <div className="rounded-lg border border-zinc-800 overflow-hidden shadow-lg relative">
-      {/* Chrome — drag handle */}
       <div
         className={`flex items-center gap-1.5 px-4 py-3 bg-zinc-900 border-b border-zinc-800 select-none ${isDragging ? "cursor-grabbing" : "cursor-default"}`}
         onMouseDown={onDragHandleMouseDown}

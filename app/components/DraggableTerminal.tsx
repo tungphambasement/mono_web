@@ -4,9 +4,11 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Terminal from "./Terminal";
 
 export default function DraggableTerminal() {
-  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [size, setSize] = useState({ width: 640, height: 320 });
   const [isDragging, setIsDragging] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const sizeRef = useRef(size);
   sizeRef.current = size;
@@ -19,27 +21,34 @@ export default function DraggableTerminal() {
   const resizeOrigin = useRef({ mouseX: 0, mouseY: 0, w: 0, h: 0 });
 
   useLayoutEffect(() => {
-    const w = Math.min(640, window.innerWidth - 40);
-    setSize((s) => ({ ...s, width: w }));
-    setPos({
-      x: Math.max(20, (window.innerWidth - w) / 2),
-      y: Math.max(60, (window.innerHeight - 380) / 2),
-    });
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const w = Math.min(640, window.innerWidth - 40);
+
+      setSize((s) => ({ ...s, width: w }));
+      setPos({
+        x: rect.left,
+        y: rect.top,
+      });
+    }
   }, []);
 
   useEffect(() => {
     function onMove(e: MouseEvent) {
-      if (!isDraggingRef.current && !isResizing.current) return;
+      if (!isDraggingRef.current && !isResizing.current || !posRef.current) return;
       e.preventDefault();
+
       if (isDraggingRef.current) {
         const x = e.clientX - dragOffset.current.x;
         const y = e.clientY - dragOffset.current.y;
+
         setPos({
           x: Math.max(-sizeRef.current.width + 80, Math.min(window.innerWidth - 80, x)),
           y: Math.max(0, Math.min(window.innerHeight - 44, y)),
         });
         return;
       }
+
       if (isResizing.current) {
         const dx = e.clientX - resizeOrigin.current.mouseX;
         const dy = e.clientY - resizeOrigin.current.mouseY;
@@ -50,11 +59,13 @@ export default function DraggableTerminal() {
         });
       }
     }
+
     function onUp() {
       isDraggingRef.current = false;
       isResizing.current = null;
       setIsDragging(false);
     }
+
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
     return () => {
@@ -64,10 +75,14 @@ export default function DraggableTerminal() {
   }, []);
 
   function handleDragStart(e: React.MouseEvent) {
+    if (!posRef.current) return;
     e.preventDefault();
     isDraggingRef.current = true;
     setIsDragging(true);
-    dragOffset.current = { x: e.clientX - posRef.current.x, y: e.clientY - posRef.current.y };
+    dragOffset.current = {
+      x: e.clientX - posRef.current.x,
+      y: e.clientY - posRef.current.y
+    };
   }
 
   function handleResizeStart(e: React.MouseEvent, dir: "s" | "e" | "se") {
@@ -83,28 +98,29 @@ export default function DraggableTerminal() {
   }
 
   return (
-    <div
-      className="fixed z-50 animate-fade-in"
-      style={{ left: pos.x, top: pos.y, width: size.width }}
-    >
-      <Terminal
-        height={size.height}
-        onDragHandleMouseDown={handleDragStart}
-        isDragging={isDragging}
-      />
-      {/* Resize handles */}
-      <div
-        className="absolute inset-x-0 bottom-0 h-2 cursor-s-resize"
-        onMouseDown={(e) => handleResizeStart(e, "s")}
-      />
-      <div
-        className="absolute inset-y-0 right-0 w-2 cursor-e-resize"
-        onMouseDown={(e) => handleResizeStart(e, "e")}
-      />
-      <div
-        className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize z-10"
-        onMouseDown={(e) => handleResizeStart(e, "se")}
-      />
+    <div ref={containerRef} className="w-full max-w-2xl h-80 my-8">
+      {pos && (
+        <div
+          className="fixed z-50 animate-fade-in"
+          style={{
+            left: pos.x,
+            top: pos.y,
+            width: size.width,
+            willChange: "left, top, width"
+          }}
+        >
+          <Terminal
+            height={size.height}
+            onDragHandleMouseDown={handleDragStart}
+            isDragging={isDragging}
+          />
+
+          {/* Resize handles */}
+          <div className="absolute inset-x-0 bottom-0 h-2 cursor-s-resize" onMouseDown={(e) => handleResizeStart(e, "s")} />
+          <div className="absolute inset-y-0 right-0 w-2 cursor-e-resize" onMouseDown={(e) => handleResizeStart(e, "e")} />
+          <div className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize z-10" onMouseDown={(e) => handleResizeStart(e, "se")} />
+        </div>
+      )}
     </div>
   );
 }
