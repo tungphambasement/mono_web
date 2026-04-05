@@ -14,6 +14,7 @@ const topLinks: { href: string; label: string; Icon: LucideIcon }[] = [
 const aboutMeSubLinks: { href: string; label: string; Icon: LucideIcon }[] = [
   { href: "/experiences", label: "Experiences", Icon: Briefcase },
   { href: "/projects", label: "Projects", Icon: FolderGit2 },
+  { href: "/activities", label: "Clubs & Activities", Icon: Package },
 ];
 
 export default function Sidebar() {
@@ -34,6 +35,8 @@ export default function Sidebar() {
       >
         Software Engineer
       </p>
+
+      <div className="border-t border-zinc-200 dark:border-zinc-800 mb-6" />
 
       <nav className="space-y-2 text-base flex flex-col">
         {topLinks.map(({ href, label, Icon }, i) => {
@@ -71,8 +74,8 @@ export default function Sidebar() {
 
           <div
             className={`overflow-hidden transition-all duration-300 ${isAboutMeActive
-              ? "max-h-40 opacity-100"
-              : "max-h-0 opacity-0 group-hover/about:max-h-40 group-hover/about:opacity-100"
+              ? "max-h-40"
+              : "max-h-0 group-hover/about:max-h-40"
               }`}
           >
             <div className="relative ml-2.5 mt-1">
@@ -81,7 +84,14 @@ export default function Sidebar() {
                 const isLast = idx === aboutMeSubLinks.length - 1;
 
                 return (
-                  <div className="relative" key={href}>
+                  <div
+                    className={`relative transition-all duration-300 ${isAboutMeActive
+                      ? "opacity-100"
+                      : "opacity-0 group-hover/about:opacity-100 group-hover/about:translate-y-0"
+                      }`}
+                    style={{ transitionDelay: isAboutMeActive ? "0ms" : `${idx * 50}ms` }}
+                    key={href}
+                  >
                     {!isLast && (
                       <div className="absolute -left-px h-full border-l border-zinc-200 dark:border-zinc-800" />
                     )}
