@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { House, Briefcase, FolderGit2, User, Feather, Package, Package2, Cpu } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -12,14 +12,15 @@ const topLinks: { href: string; label: string; Icon: LucideIcon }[] = [
 ];
 
 const aboutMeSubLinks: { href: string; label: string; Icon: LucideIcon }[] = [
-  { href: "/experiences", label: "Experiences", Icon: Briefcase },
-  { href: "/projects", label: "Projects", Icon: FolderGit2 },
-  { href: "/activities", label: "Clubs & Activities", Icon: Package },
+  { href: "/about?tab=experiences", label: "Experiences", Icon: Briefcase },
+  { href: "/about?tab=projects", label: "Projects", Icon: FolderGit2 },
+  { href: "/about?tab=activities", label: "Clubs & Activities", Icon: Package },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const isAboutMeActive = aboutMeSubLinks.some((l) => pathname === l.href);
+  const searchParams = useSearchParams();
+  const isAboutMeActive = pathname === "/about";
 
   return (
     <aside className="w-64 shrink-0 border-r border-zinc-200 dark:border-zinc-800 sticky top-0 h-screen p-8 hidden md:flex flex-col animate-fade-in">
@@ -80,7 +81,8 @@ export default function Sidebar() {
           >
             <div className="relative ml-2.5 mt-1">
               {aboutMeSubLinks.map(({ href, label }, idx) => {
-                const active = pathname === href;
+                const tabParam = new URL(href, "http://x").searchParams.get("tab");
+                const active = pathname === "/about" && searchParams.get("tab") === tabParam;
                 const isFirst = idx === 0;
                 const isLast = idx === aboutMeSubLinks.length - 1;
 

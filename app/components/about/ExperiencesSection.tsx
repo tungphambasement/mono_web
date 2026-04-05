@@ -26,13 +26,12 @@ const experiences = [
     location: "Hanoi, VN",
     description:
       "Conducted research on an indoor positioning system using PyTorch and signal processing frameworks, improving accuracy by 30% and inference time by 50% over leading research models.",
-  }
+  },
 ];
 
-export default function ExperiencesPage() {
+export default function ExperiencesSection() {
   return (
-    <section className="space-y-12 w-[80%] mx-auto">
-      <h1 className="text-3xl font-bold tracking-tight">Experiences</h1>
+    <div className="space-y-12">
       <ol className="relative">
         {experiences.map((exp, i) => {
           const isComingSoon = exp.period === "Coming Soon";
@@ -73,14 +72,12 @@ export default function ExperiencesPage() {
                 <p className="text-base text-zinc-500 dark:text-zinc-400 leading-relaxed">
                   {exp.description}
                 </p>
-                {isComingSoon && (
-                  <div className="mb-2" />
-                )}
+                {isComingSoon && <div className="mb-2" />}
               </div>
             </li>
           );
         })}
       </ol>
-    </section>
+    </div>
   );
 }

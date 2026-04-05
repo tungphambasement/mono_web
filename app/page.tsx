@@ -26,7 +26,7 @@ export default function Home() {
       {desktopBooted && <PhysicsOverlay />}
       {/* Desktop icons */}
       {desktopBooted && (
-        <div className="absolute top-5 left-5 z-10 flex flex-col gap-4">
+        <div className="absolute top-5 left-5 z-10 flex flex-col gap-4 my-8">
           <DesktopIcon
             icon={<TerminalSquare size={22} className="text-green-400" />}
             label="Terminal"

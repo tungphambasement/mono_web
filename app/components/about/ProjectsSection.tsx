@@ -29,10 +29,9 @@ const projects = [
   },
 ];
 
-export default function ProjectsPage() {
+export default function ProjectsSection() {
   return (
-    <section className="space-y-10">
-      <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
+    <div className="space-y-10">
       <div className="grid gap-5 sm:grid-cols-2">
         {projects.map((proj, i) => (
           <a
@@ -57,6 +56,6 @@ export default function ProjectsPage() {
           </a>
         ))}
       </div>
-    </section>
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { House, Briefcase, FolderGit2, User, Feather, Package, Cpu, Computer } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -12,18 +12,19 @@ const topLinks: { href: string; label: string; Icon: LucideIcon }[] = [
 ];
 
 const aboutMeSubLinks: { href: string; label: string; Icon: LucideIcon }[] = [
-  { href: "/experiences", label: "Experiences", Icon: Briefcase },
-  { href: "/projects", label: "Projects", Icon: FolderGit2 },
-  { href: "/activities", label: "Clubs & Activities", Icon: Package },
+  { href: "/about?tab=experiences", label: "Experiences", Icon: Briefcase },
+  { href: "/about?tab=projects", label: "Projects", Icon: FolderGit2 },
+  { href: "/about?tab=activities", label: "Clubs & Activities", Icon: Package },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
-  const isAboutMeActive = aboutMeSubLinks.some((l) => pathname === l.href);
+  const searchParams = useSearchParams();
+  const isAboutMeActive = pathname === "/about";
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background animate-fade-in">
-      <div className="mx-auto flex h-14 w-[90%] items-center justify-between px-6">
+      <div className="mx-auto flex w-[90%] items-center justify-between px-6 py-4">
         {/* Brand */}
         <Link
           href="/"
@@ -84,7 +85,8 @@ export default function Navbar() {
             <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 pointer-events-none group-hover/about:opacity-100 group-hover/about:pointer-events-auto transition-all duration-200 translate-y-1 group-hover/about:translate-y-0">
               <div className="min-w-44 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md shadow-lg py-1 overflow-hidden">
                 {aboutMeSubLinks.map(({ href, label, Icon }) => {
-                  const active = pathname === href;
+                  const tabParam = new URL(href, "http://x").searchParams.get("tab");
+                  const active = pathname === "/about" && searchParams.get("tab") === tabParam;
                   return (
                     <Link
                       key={href}
