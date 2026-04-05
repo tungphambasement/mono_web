@@ -1,5 +1,5 @@
-import TerminalHero from "./components/TerminalHero";
+import DraggableTerminal from "./components/DraggableTerminal";
 
 export default function Home() {
-  return <TerminalHero />;
+  return <DraggableTerminal />;
 }
