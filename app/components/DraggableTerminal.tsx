@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import Terminal from "./Terminal";
+import Terminal, { ExternalCommandDef } from "./Terminal";
 
-export default function DraggableTerminal() {
+export default function DraggableTerminal({ externalCommands }: { externalCommands?: Record<string, ExternalCommandDef> }) {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
-  const [size, setSize] = useState({ width: 640, height: 320 });
+  const [size, setSize] = useState({ width: 520, height: 200 });
   const [isDragging, setIsDragging] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -23,12 +23,12 @@ export default function DraggableTerminal() {
   useLayoutEffect(() => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
-      const w = Math.min(640, window.innerWidth - 40);
+      const w = Math.min(520, window.innerWidth - 40);
 
       setSize((s) => ({ ...s, width: w }));
       setPos({
         x: rect.left,
-        y: rect.top,
+        y: Math.max(0, rect.top - 40),
       });
     }
   }, []);
@@ -98,7 +98,7 @@ export default function DraggableTerminal() {
   }
 
   return (
-    <div ref={containerRef} className="w-full max-w-2xl h-80 my-8">
+    <div ref={containerRef} className="w-full max-w-2xl my-8">
       {pos && (
         <div
           className="fixed z-50 animate-fade-in"
@@ -113,6 +113,7 @@ export default function DraggableTerminal() {
             height={size.height}
             onDragHandleMouseDown={handleDragStart}
             isDragging={isDragging}
+            externalCommands={externalCommands}
           />
 
           {/* Resize handles */}

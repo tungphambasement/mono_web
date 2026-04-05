@@ -29,11 +29,10 @@ const experiences = [
   }
 ];
 
-export default function Experiences() {
+export default function ExperiencesPage() {
   return (
-    <section className="space-y-12">
+    <section className="space-y-12 w-[80%] mx-auto">
       <h1 className="text-3xl font-bold tracking-tight">Experiences</h1>
-
       <ol className="relative">
         {experiences.map((exp, i) => {
           const isComingSoon = exp.period === "Coming Soon";

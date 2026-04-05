@@ -5,7 +5,7 @@ import { KeyboardEvent, ReactNode, useCallback, useEffect, useRef, useState } fr
 
 const SCRIPT_COMMANDS = [
   "locate --engineer",
-  "languages --list",
+  "physics.play()",
 ];
 
 // Styled segments for each script command's output typing animation.
@@ -14,15 +14,12 @@ type OutputSegment = { text: string; className: string };
 const SCRIPT_OUTPUT_SEGMENTS: OutputSegment[][] = [
   // locate --engineer
   [{ text: "Tung D. Pham found at /rochester/software-engineer", className: "text-zinc-300" }],
-  // languages --list
-  [
-    { text: "Languages", className: "text-zinc-500" },
-    { text: "  ", className: "" },
-    { text: "C++ · TypeScript · Java · Python · Rust", className: "text-zinc-200" },
-  ],
+  // physics.play()
+  [{ text: "Launching physics simulation…", className: "text-zinc-400" }],
 ];
 
 const PROMPT_SPEED = 60;   // ms per character
+const OUTPUT_SPEED = 30;   // ms per character for output typing animation
 const PAUSE_AFTER_TYPE = 150;  // ms after fully typed, before "Enter"
 const PAUSE_AFTER_CMD = 300;  // ms after output appears, before next command
 
@@ -40,8 +37,14 @@ const COMMAND_HELP: Record<string, string> = {
   git: "git commands (try: git log)",
   whoami: "identify yourself",
   echo: "print text",
-  neofetch: "system information",
+  pwd: "print working directory",
   clear: "clear the terminal",
+};
+
+export type ExternalCommandDef = {
+  description?: string;
+  output?: ReactNode;
+  action: () => void;
 };
 
 const ALL_COMMANDS = Object.keys(COMMAND_HELP);
@@ -50,12 +53,14 @@ function renderCommandOutput(
   cmd: string,
   args: string[],
   nav: (path: string) => void,
+  externalCommands: Record<string, ExternalCommandDef> = {},
 ): ReactNode {
   switch (cmd) {
     case "":
       return null;
 
-    case "help":
+    case "help": {
+      const extEntries = Object.entries(externalCommands).filter(([, v]) => v.description);
       return (
         <div className="space-y-0.5">
           <div className="text-zinc-500 mb-1">Available commands:</div>
@@ -65,9 +70,21 @@ function renderCommandOutput(
               <span className="text-zinc-500">{desc}</span>
             </div>
           ))}
+          {extEntries.length > 0 && (
+            <>
+              <div className="text-zinc-600 mt-1 mb-0.5 text-xs">― external ―</div>
+              {extEntries.map(([c, { description }]) => (
+                <div key={c}>
+                  <span className="text-zinc-200 inline-block w-24">{c}()</span>
+                  <span className="text-zinc-500">{description}</span>
+                </div>
+              ))}
+            </>
+          )}
           <div className="text-zinc-600 mt-1 text-xs">↑↓ history · Tab autocomplete · Ctrl+L clear</div>
         </div>
       );
+    }
 
     case "locate":
       return <div className="text-zinc-300">Tung D. Pham found at /rochester/software-engineer</div>;
@@ -303,9 +320,10 @@ interface TerminalProps {
   height: number;
   onDragHandleMouseDown: (e: React.MouseEvent) => void;
   isDragging: boolean;
+  externalCommands?: Record<string, ExternalCommandDef>;
 }
 
-export default function Terminal({ height, onDragHandleMouseDown, isDragging }: TerminalProps) {
+export default function Terminal({ height, onDragHandleMouseDown, isDragging, externalCommands = {} }: TerminalProps) {
   const router = useRouter();
   const nav = useCallback((p: string) => router.push(p), [router]);
 
@@ -356,10 +374,17 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging }: 
     } else if (scriptPhase === "waiting") {
       scriptTimerRef.current = setTimeout(() => {
         const trimmed = currentInput.trim();
-        const [c = "", ...args] = trimmed.split(/\s+/);
+        const [cmdRaw = "", ...args] = trimmed.split(/\s+/);
+        const cmd = cmdRaw.replace(/\(\)$/, "").toLowerCase();
         pendingPromptRef.current = trimmed;
         pendingSegmentsRef.current = SCRIPT_OUTPUT_SEGMENTS[scriptIdx] ?? [];
-        pendingNodeRef.current = renderCommandOutput(c.toLowerCase(), args, nav);
+        // Fire external action if matched
+        if (externalCommands[cmd]) {
+          externalCommands[cmd].action();
+          pendingNodeRef.current = externalCommands[cmd].output ?? null;
+        } else {
+          pendingNodeRef.current = renderCommandOutput(cmd, args, nav, externalCommands);
+        }
         setCurrentInput("");
         setTypedOutputLen(0);
         setScriptPhase("outputTyping");
@@ -369,7 +394,7 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging }: 
       if (typedOutputLen < totalLen) {
         scriptTimerRef.current = setTimeout(
           () => setTypedOutputLen((n) => n + 1),
-          PROMPT_SPEED,
+          OUTPUT_SPEED,
         );
       } else {
         scriptTimerRef.current = setTimeout(() => {
@@ -386,7 +411,7 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging }: 
     }
 
     return () => { if (scriptTimerRef.current) clearTimeout(scriptTimerRef.current); };
-  }, [scriptPhase, scriptIdx, currentInput, nav, typedOutputLen]);
+  }, [scriptPhase, scriptIdx, currentInput, nav, typedOutputLen, externalCommands]);
 
   useEffect(() => {
     if (isInteractive) inputRef.current?.focus();
@@ -398,9 +423,11 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging }: 
 
   function executeCommand(raw: string) {
     const trimmed = raw.trim();
-    const [cmd = "", ...args] = trimmed.split(/\s+/);
+    // Strip trailing () so `physics.play()` and `physics.play` both work
+    const [cmdRaw = "", ...args] = trimmed.split(/\s+/);
+    const cmd = cmdRaw.replace(/\(\)$/, "").toLowerCase();
 
-    if (cmd.toLowerCase() === "clear") {
+    if (cmd === "clear") {
       setHistory([]);
       setCurrentInput("");
       setCmdHistoryIdx(-1);
@@ -408,7 +435,17 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging }: 
     }
 
     if (trimmed !== "") setCmdHistory((prev) => [trimmed, ...prev]);
-    const output = renderCommandOutput(cmd.toLowerCase(), args, nav);
+
+    if (externalCommands[cmd]) {
+      const { action, output = null } = externalCommands[cmd];
+      action();
+      setHistory((prev) => [...prev, { prompt: trimmed, output }]);
+      setCurrentInput("");
+      setCmdHistoryIdx(-1);
+      return;
+    }
+
+    const output = renderCommandOutput(cmd, args, nav, externalCommands);
     setHistory((prev) => [...prev, { prompt: trimmed, output }]);
     setCurrentInput("");
     setCmdHistoryIdx(-1);
@@ -446,7 +483,8 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging }: 
         e.preventDefault();
         const partial = currentInput.trim().toLowerCase();
         if (!partial || partial.includes(" ")) break;
-        const matches = ALL_COMMANDS.filter((c) => c.startsWith(partial));
+        const allCmds = [...ALL_COMMANDS, ...Object.keys(externalCommands)];
+        const matches = allCmds.filter((c) => c.startsWith(partial));
         if (matches.length === 1) setCurrentInput(matches[0]);
         break;
       }
