@@ -7,6 +7,7 @@ type Dot = {
   layer: number;
   dist: number;
   angle: number;
+  hasTrail: boolean;
 };
 
 interface CustomStyle extends React.CSSProperties {
@@ -18,13 +19,18 @@ interface CustomStyle extends React.CSSProperties {
 const spacing = 40;
 const MAX_REACH = spacing * 2;
 
-export default function Wallpaper() {
+export default function Wallpaper3() {
   const [dots, setDots] = useState<Dot[]>([]);
   const [maxLayer, setMaxLayer] = useState(0);
+  const rectRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const screenCenterX = Math.round(window.innerWidth / 2);
-    const screenCenterY = Math.round(window.innerHeight / 2);
+    if (!rectRef.current) return;
+    const rect = rectRef.current.getBoundingClientRect();
+    const MAX_DIST = Math.sqrt(rect.width ** 2 + rect.height ** 2) * 0.4;
+
+    const screenCenterX = Math.round(rect.width / 2);
+    const screenCenterY = Math.round(rect.height / 2);
 
     const stepsX = Math.ceil(screenCenterX / spacing);
     const stepsY = Math.ceil(screenCenterY / spacing);
@@ -35,6 +41,9 @@ export default function Wallpaper() {
     for (let i = -stepsY; i <= stepsY; i++) {
       for (let j = -stepsX; j <= stepsX; j++) {
         const isCenter = i === 0 && j === 0;
+        const x = screenCenterX + j * spacing;
+        const y = screenCenterY + i * spacing;
+        if (Math.sqrt((x - screenCenterX) ** 2 + (y - screenCenterY) ** 2) > MAX_DIST) continue;
 
         if (isCenter || Math.random() > 0.33) {
           const layer = Math.abs(j) + Math.abs(i);
@@ -43,8 +52,8 @@ export default function Wallpaper() {
           rawNodes.push({
             gridX: j,
             gridY: i,
-            x: screenCenterX + (j * spacing),
-            y: screenCenterY + (i * spacing),
+            x,
+            y,
             layer
           });
         }
@@ -89,6 +98,7 @@ export default function Wallpaper() {
         layer: dot.layer,
         dist,
         angle,
+        hasTrail: Math.random() > 0.8,
       };
     });
 
@@ -123,27 +133,27 @@ export default function Wallpaper() {
         @keyframes layer-anim-${K} {
           0%, ${P(collapseStart)}% {
             transform: rotate(var(--angle)) translateX(0px) scaleX(1);
-            opacity: 0.3;
-            animation-timing-function: ease-in;
+            opacity: 0.5;
+            animation-timing-function: ease-in-out;
           }
           ${P(collapseMid)}% {
             transform: rotate(var(--angle)) translateX(0px) scaleX(var(--scale-x));
             opacity: 1;
-            animation-timing-function: ease-out;
+            animation-timing-function: ease-in-out;
           }
           ${P(collapseEnd)}%, ${P(expandStart)}% {
             transform: rotate(var(--angle)) translateX(var(--dist)) scaleX(1);
             opacity: 0;
-            animation-timing-function: ease-in;
+            animation-timing-function: ease-in-out;
           }
           ${P(expandMid)}% {
             transform: rotate(var(--angle)) translateX(0px) scaleX(var(--scale-x));
             opacity: 1;
-            animation-timing-function: ease-out;
+            animation-timing-function: ease-in-out;
           }
           ${P(expandEnd)}%, 100% {
             transform: rotate(var(--angle)) translateX(0px) scaleX(1);
-            opacity: 0.3;
+            opacity: 0.5;
           }
         }
       `;
@@ -151,13 +161,21 @@ export default function Wallpaper() {
     return <style>{css}</style>;
   };
 
+  const mask = `radial-gradient(
+    circle at center, 
+    black 0%, 
+    black 30%, 
+    rgba(0,0,0,0.3) 55%, 
+    transparent 80%
+  )`;
+
   return (
-    <div className="absolute inset-0 w-full h-full -z-10 overflow-hidden bg-zinc-950">
+    <div className="absolute inset-0 w-full h-full -z-10 overflow-hidden bg-zinc-950" ref={rectRef}>
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          WebkitMaskImage: 'radial-gradient(circle at center, black 40%, transparent 90%)',
-          maskImage: 'radial-gradient(circle at center, black 40%, transparent 90%)',
+          WebkitMaskImage: mask,
+          maskImage: mask,
         }}
       >
         {renderKeyframes()}
@@ -173,7 +191,7 @@ export default function Wallpaper() {
               height: '2px',
               transformOrigin: '0px 1px',
               '--dist': `${dot.dist}px`,
-              '--scale-x': dot.dist / 2,
+              '--scale-x': dot.hasTrail ? dot.dist / 2 : 1,
               '--angle': `${dot.angle}deg`,
               animation: `layer-anim-${dot.layer} ${TotalTime}s infinite`,
             } as CustomStyle}

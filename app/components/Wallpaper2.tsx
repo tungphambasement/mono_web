@@ -18,7 +18,7 @@ interface CustomStyle extends React.CSSProperties {
   '--stretch-y': number;
 }
 
-export default function Wallpaper() {
+export default function Wallpaper2() {
   const [dots, setDots] = useState<Dot[]>([]);
   const [maxLayer, setMaxLayer] = useState(0);
 

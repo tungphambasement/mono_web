@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import DraggableWindow from "./components/DraggableWindow";
 import Terminal from "./components/Terminal";
 import Wallpaper from "./components/Wallpaper3";
+import Wallpaper2 from "./components/Wallpaper2";
+import Wallpaper3 from "./components/Wallpaper3";
 import DockerLogs from "./components/DockerLogs";
 import TransactionsLogs from "./components/TransactionsLogs";
 import Taskbar from "./components/Taskbar";
@@ -161,7 +163,7 @@ export default function Home() {
       {/* Desktop environment */}
       {desktopBooted && (
         <div className="relative flex flex-1 w-full transition-opacity duration-1000 animate-fade-in">
-          <Wallpaper />
+          <Wallpaper3 />
           <Taskbar items={
             [{
               id: "terminal",
