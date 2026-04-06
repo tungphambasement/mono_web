@@ -1,13 +1,14 @@
 "use client";
 
-import { use, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DraggableWindow from "./components/DraggableWindow";
 import Terminal from "./components/Terminal";
 import Wallpaper from "./components/Wallpaper";
 import DockerLogs from "./components/DockerLogs";
 import TransactionsLogs from "./components/TransactionsLogs";
 import Taskbar from "./components/Taskbar";
-import { TerminalIcon } from "lucide-react";
+import TerminalShortcut from "./components/TerminalShortcut";
+import { useTaskbarState } from "./hooks/useTaskbarState";
 
 
 type TerminalState = "visible" | "minimized" | "closed";
@@ -23,6 +24,7 @@ const DEFAULT_TRANSACTIONS_POS = (rect: DOMRect) => ({ x: rect.left + (rect.widt
 export default function Home() {
   const [desktopBooted, setDesktopBooted] = useState(false);
   const [terminalState, setTerminalState] = useState<TerminalState>(DEFAULT_TERMINAL_STATE);
+  const taskbar = useTaskbarState(["terminal"]);
   const [logsPhase, setLogsPhase] = useState<"hidden" | "visible" | "freeze" | "fading">("hidden");
   const [introPlayed, setIntroPlayed] = useState(
     false
@@ -33,10 +35,13 @@ export default function Home() {
   function handleTerminalTaskbarClick() {
     if (terminalState === "closed") {
       setTerminalState("visible");
+      taskbar.open("terminal");
     } else if (terminalState === "minimized") {
       setTerminalState("visible");
+      taskbar.focus("terminal");
     } else {
       setTerminalState("minimized");
+      taskbar.blur();
     }
   }
 
@@ -46,7 +51,7 @@ export default function Home() {
     logsTimersRef.current = [];
     const t1 = setTimeout(() => setLogsPhase("freeze"), 0);
     const t2 = setTimeout(() => setLogsPhase("fading"), 50);
-    const t3 = setTimeout(() => setLogsPhase("hidden"), 1700);
+    const t3 = setTimeout(() => setLogsPhase("hidden"), 450);
     logsTimersRef.current = [t1, t2, t3];
   }
 
@@ -74,7 +79,7 @@ export default function Home() {
               ? { animationDelay: "0s" }
               : logsPhase === "freeze"
                 ? { animation: "none", opacity: 1 }
-                : { animation: "none", opacity: 0, transition: "opacity 1000ms ease", pointerEvents: "none" }
+                : { animation: "none", opacity: 0, transition: "opacity 400ms ease", pointerEvents: "none" }
             }
           >
             {(bag) => <DockerLogs {...bag} />}
@@ -89,7 +94,7 @@ export default function Home() {
               ? { animationDelay: "3s", animationFillMode: "both" }
               : logsPhase === "freeze"
                 ? { animation: "none", opacity: 1 }
-                : { animation: "none", opacity: 0, transition: "opacity 1000ms ease", pointerEvents: "none" }
+                : { animation: "none", opacity: 0, transition: "opacity 400ms ease", pointerEvents: "none" }
             }
           >
             {(bag) => <TransactionsLogs {...bag} />}
@@ -105,6 +110,13 @@ export default function Home() {
             defaultWidth={DEFAULT_TERMINAL_SIZE.width}
             defaultHeight={DEFAULT_TERMINAL_SIZE.height}
             getInitialPos={DEFAULT_TERMINAL_POS}
+            style={
+              logsPhase === "fading"
+                ? { opacity: 0, transition: "opacity 400ms ease", pointerEvents: "none" }
+                : logsPhase === "freeze"
+                  ? { opacity: 1 }
+                  : undefined
+            }
           >
             {({ onDragHandleMouseDown, isDragging, height }) => (
               <Terminal
@@ -124,19 +136,22 @@ export default function Home() {
                     action: () => setDesktopBooted(true),
                   },
                   {
-                    key: "close",
+                    key: "finalize",
                     description: "close all windows",
                     action: () => {
                       sessionStorage.setItem("introPlayed", "1");
                       setIntroPlayed(true);
                       triggerLogsFade();
-                      setTimeout(() => setTerminalState("closed"), 400);
+                      setTimeout(() => {
+                        setTerminalState("closed");
+                        taskbar.close("terminal");
+                      }, 450);
                     },
-                    output: () => <span className="text-zinc-400">Closing all windows…</span>,
+                    output: () => <span className="text-zinc-400">Welcome user 8995...</span>,
                   },
                 ]}
-                onClose={() => setTerminalState("closed")}
-                onMinimize={() => setTerminalState("minimized")}
+                onClose={() => { setTerminalState("closed"); taskbar.close("terminal"); }}
+                onMinimize={() => { setTerminalState("minimized"); taskbar.blur(); }}
               />
             )}
           </DraggableWindow>
@@ -150,9 +165,10 @@ export default function Home() {
           <Taskbar items={
             [{
               id: "terminal",
-              icon: TerminalIcon,
+              icon: <TerminalShortcut />,
               label: "Terminal",
-              isActive: terminalState === "visible",
+              isActive: taskbar.getStatus("terminal") !== "none",
+              isFocused: taskbar.getStatus("terminal") === "focused",
               onClick: handleTerminalTaskbarClick,
             },
             ]

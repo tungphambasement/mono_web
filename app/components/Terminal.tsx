@@ -50,8 +50,9 @@ const SCRIPT: ScriptEntry[] = [
     pauseAfterExecution: 5000,
   },
   {
-    command: "close --all",
-    outputSegments: [{ text: "Closing all windows\u2026", className: "text-zinc-500" }],
+    command: "finalize --environment",
+    outputSegments: [{ text: "Welcome user 8995\u2026", className: "text-zinc-500" }],
+    pauseAfterCmd: 1000,
     pauseAfterExecution: 2000,
   },
 ];
@@ -63,7 +64,6 @@ const PAUSE_AFTER_CMD = 400;
 const PAUSE_AFTER_EXECUTION = 100;
 
 //  Command Definitions 
-
 const DEFAULT_COMMANDS: CommandDef[] = [
   {
     key: "help",

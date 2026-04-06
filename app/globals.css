@@ -149,3 +149,14 @@ body {
 .styled-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.32);
 }
+
+@layer components {
+  .glassify {
+    @apply bg-white/20 backdrop-blur-[5px];
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .dark .glassify {
+    @apply bg-black/30;
+  }
+}
