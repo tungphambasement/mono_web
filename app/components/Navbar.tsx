@@ -23,7 +23,7 @@ export default function Navbar() {
   const isAboutMeActive = pathname === "/about";
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-background animate-fade-in">
+    <header className="sticky top-0 z-40 w-full bg-transparent animate-fade-in">
       <div className="mx-auto flex w-[90%] items-center justify-between px-6 py-4">
         {/* Brand */}
         <Link

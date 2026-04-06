@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import DraggableWindow from "./components/DraggableWindow";
 import Terminal from "./components/Terminal";
-import Wallpaper from "./components/Wallpaper";
+import Wallpaper from "./components/Wallpaper3";
 import DockerLogs from "./components/DockerLogs";
 import TransactionsLogs from "./components/TransactionsLogs";
 import Taskbar from "./components/Taskbar";
