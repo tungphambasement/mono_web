@@ -41,7 +41,7 @@ const SCRIPT_OUTPUT_SEGMENTS: OutputSegment[][] = [
 const PROMPT_SPEED = 60;
 const OUTPUT_SPEED = 30;
 const PAUSE_AFTER_TYPE = 150;
-const PAUSE_AFTER_CMD = 200;
+const PAUSE_AFTER_CMD = 400;
 
 //  Command Definitions 
 
@@ -530,7 +530,7 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging, ex
           className="w-3 h-3 rounded-full bg-[#ff5f56] hover:bg-[#bf4942] transition-colors flex items-center justify-center group/btn hover:cursor-pointer"
           aria-label="Close"
         >
-          <svg className="w-1.5 h-1.5 opacity-0 group-hover:opacity-100 transition-opacity -translate-x-[0.5px]" viewBox="0 0 6 6">
+          <svg className="w-1.5 h-1.5 opacity-0 group-hover:opacity-100 transition-opacity" viewBox="0 0 6 6">
             <path d="M1.5 1.5L4.5 4.5M1.5 4.5L4.5 1.5" stroke="#4c0000" strokeWidth="1.2" strokeLinecap="round" />
           </svg>
         </button>
@@ -540,7 +540,7 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging, ex
           className="w-3 h-3 rounded-full bg-[#ffbd2e] hover:bg-[#bf8e22] transition-colors flex items-center justify-center hover:cursor-pointer"
           aria-label="Minimize"
         >
-          <svg className="w-1.5 h-1.5 opacity-0 group-hover:opacity-100 transition-opacity -translate-x-[0.5px]" viewBox="0 0 6 6">
+          <svg className="w-1.5 h-1.5 opacity-0 group-hover:opacity-100 transition-opacity" viewBox="0 0 6 6">
             <path d="M1 3H5" stroke="#995700" strokeWidth="1.2" strokeLinecap="round" />
           </svg>
         </button>
@@ -549,7 +549,7 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging, ex
           className="w-3 h-3 rounded-full bg-[#27c93f] hover:bg-[#1d962f] transition-colors flex items-center justify-center hover:cursor-pointer"
           aria-label="Maximize"
         >
-          <svg className="w-1.5 h-1.5 opacity-0 group-hover:opacity-100 transition-opacity -translate-x-[0.5px]" viewBox="0 0 6 6">
+          <svg className="w-1.5 h-1.5 opacity-0 group-hover:opacity-100 transition-opacity" viewBox="0 0 6 6">
             <path d="M3 1V5M1 3H5" stroke="#006500" strokeWidth="1.2" strokeLinecap="round" />
           </svg>
         </button>
