@@ -26,22 +26,41 @@ export type CommandDef = {
   action?: (context: CommandContext) => void;
 };
 
+
+type ScriptEntry = {
+  command: string;
+  outputSegments: OutputSegment[];
+  promptSpeed?: number;
+  outputSpeed?: number;
+  pauseAfterType?: number;
+  pauseAfterCmd?: number;
+  pauseAfterExecution?: number;
+};
+
 //  Constants & Config 
 
-const SCRIPT_COMMANDS = [
-  "boot --desktop",
-  "locate --engineer",
-];
-
-const SCRIPT_OUTPUT_SEGMENTS: OutputSegment[][] = [
-  [{ text: "Booting desktop environment…", className: "text-zinc-400" }],
-  [{ text: "Tung D. Pham found at /rochester/swe", className: "text-zinc-300" }],
+const SCRIPT: ScriptEntry[] = [
+  {
+    command: "locate --engineer",
+    outputSegments: [{ text: "Tung D. Pham found at /rochester/swe", className: "text-zinc-300" }],
+  },
+  {
+    command: "boot --desktop",
+    outputSegments: [{ text: "Booting desktop environment\u2026", className: "text-zinc-400" }],
+    pauseAfterExecution: 5000,
+  },
+  {
+    command: "close --all",
+    outputSegments: [{ text: "Closing all windows\u2026", className: "text-zinc-500" }],
+    pauseAfterExecution: 2000,
+  },
 ];
 
 const PROMPT_SPEED = 60;
 const OUTPUT_SPEED = 30;
 const PAUSE_AFTER_TYPE = 150;
 const PAUSE_AFTER_CMD = 400;
+const PAUSE_AFTER_EXECUTION = 100;
 
 //  Command Definitions 
 
@@ -283,9 +302,11 @@ interface TerminalProps {
   externalCommands?: CommandDef[];
   onClose?: () => void;
   onMinimize?: () => void;
+  skipIntro?: boolean;
+  onIntroComplete?: () => void;
 }
 
-export default function Terminal({ height, onDragHandleMouseDown, isDragging, externalCommands = [], onClose, onMinimize }: TerminalProps) {
+export default function Terminal({ height, onDragHandleMouseDown, isDragging, externalCommands = [], onClose, onMinimize, skipIntro = false, onIntroComplete }: TerminalProps) {
   const router = useRouter();
   const nav = useCallback((p: string) => router.push(p), [router]);
 
@@ -294,8 +315,8 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging, ex
   const [cmdHistory, setCmdHistory] = useState<string[]>([]);
   const [cmdHistoryIdx, setCmdHistoryIdx] = useState(-1);
 
-  const [scriptIdx, setScriptIdx] = useState(0);
-  const [scriptPhase, setScriptPhase] = useState<"typing" | "waiting" | "outputTyping" | "done">("typing");
+  const [scriptIdx, setScriptIdx] = useState(() => skipIntro ? SCRIPT.length : 0);
+  const [scriptPhase, setScriptPhase] = useState<"typing" | "waiting" | "outputTyping" | "executing" | "done">(() => skipIntro ? "done" : "typing");
   const scriptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingPromptRef = useRef("");
   const pendingSegmentsRef = useRef<OutputSegment[]>([]);
@@ -382,23 +403,29 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging, ex
 
   /* Intro script effect */
   useEffect(() => {
-    if (scriptPhase === "done") return;
+    if (scriptPhase === "done" || skipIntro) return;
 
-    if (scriptIdx >= SCRIPT_COMMANDS.length) {
+    if (scriptIdx >= SCRIPT.length) {
       setScriptPhase("done");
       return;
     }
 
-    const cmdStr = SCRIPT_COMMANDS[scriptIdx];
+    const entry = SCRIPT[scriptIdx];
+    const cmdStr = entry.command;
+    const promptSpeed = entry.promptSpeed ?? PROMPT_SPEED;
+    const outputSpeed = entry.outputSpeed ?? OUTPUT_SPEED;
+    const pauseAfterType = entry.pauseAfterType ?? PAUSE_AFTER_TYPE;
+    const pauseAfterCmd = entry.pauseAfterCmd ?? PAUSE_AFTER_CMD;
+    const pauseAfterExecution = entry.pauseAfterExecution ?? PAUSE_AFTER_EXECUTION;
 
     if (scriptPhase === "typing") {
       if (currentInput.length < cmdStr.length) {
         scriptTimerRef.current = setTimeout(
           () => setCurrentInput(cmdStr.slice(0, currentInput.length + 1)),
-          PROMPT_SPEED,
+          promptSpeed,
         );
       } else {
-        scriptTimerRef.current = setTimeout(() => setScriptPhase("waiting"), PAUSE_AFTER_TYPE);
+        scriptTimerRef.current = setTimeout(() => setScriptPhase("waiting"), pauseAfterType);
       }
     } else if (scriptPhase === "waiting") {
       scriptTimerRef.current = setTimeout(() => {
@@ -406,7 +433,7 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging, ex
         const [cmdRaw = "", ...args] = trimmed.split(/\s+/);
 
         pendingPromptRef.current = trimmed;
-        pendingSegmentsRef.current = SCRIPT_OUTPUT_SEGMENTS[scriptIdx] ?? [];
+        pendingSegmentsRef.current = entry.outputSegments ?? [];
         pendingNodeRef.current = getCommandOutput(cmdRaw, args);
         pendingCmdRef.current = { cmdRaw, args };
 
@@ -419,7 +446,7 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging, ex
       if (typedOutputLen < totalLen) {
         scriptTimerRef.current = setTimeout(
           () => setTypedOutputLen((n) => n + 1),
-          OUTPUT_SPEED,
+          outputSpeed,
         );
       } else {
         scriptTimerRef.current = setTimeout(() => {
@@ -433,17 +460,25 @@ export default function Terminal({ height, onDragHandleMouseDown, isDragging, ex
           ]);
           setCmdHistory((prev) => [pendingPromptRef.current, ...prev]);
           setTypedOutputLen(0);
-          setScriptIdx((i) => i + 1);
-          setScriptPhase("typing");
-        }, PAUSE_AFTER_CMD);
+          setScriptPhase("executing");
+        }, pauseAfterCmd);
       }
+    } else if (scriptPhase === "executing") {
+      scriptTimerRef.current = setTimeout(() => {
+        setScriptIdx((i: number) => i + 1);
+        setScriptPhase("typing");
+      }, pauseAfterExecution);
     }
 
     return () => { if (scriptTimerRef.current) clearTimeout(scriptTimerRef.current); };
   }, [scriptPhase, scriptIdx, currentInput, typedOutputLen, getCommandOutput, runCommandAction]);
 
   useEffect(() => {
-    if (isInteractive) inputRef.current?.focus();
+    if (isInteractive) {
+      inputRef.current?.focus();
+      if (!skipIntro) onIntroComplete?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInteractive]);
 
   useEffect(() => {

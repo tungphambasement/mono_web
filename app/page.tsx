@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import DraggableWindow from "./components/DraggableWindow";
 import Terminal from "./components/Terminal";
 import Wallpaper from "./components/Wallpaper";
 import DockerLogs from "./components/DockerLogs";
 import TransactionsLogs from "./components/TransactionsLogs";
+import Taskbar from "./components/Taskbar";
+import { TerminalIcon } from "lucide-react";
 
 
 type TerminalState = "visible" | "minimized" | "closed";
@@ -21,8 +23,12 @@ const DEFAULT_TRANSACTIONS_POS = (rect: DOMRect) => ({ x: rect.left + (rect.widt
 export default function Home() {
   const [desktopBooted, setDesktopBooted] = useState(false);
   const [terminalState, setTerminalState] = useState<TerminalState>(DEFAULT_TERMINAL_STATE);
-  const [showLogs, setShowLogs] = useState(false);
+  const [logsPhase, setLogsPhase] = useState<"hidden" | "visible" | "freeze" | "fading">("hidden");
+  const [introPlayed, setIntroPlayed] = useState(
+    false
+  );
   const screenRef = useRef<HTMLDivElement>(null);
+  const logsTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   function handleTerminalTaskbarClick() {
     if (terminalState === "closed") {
@@ -34,25 +40,42 @@ export default function Home() {
     }
   }
 
-  // reveal decorative log panels shortly after boot
+  function triggerLogsFade() {
+    // cancel any pending auto-fade timers
+    logsTimersRef.current.forEach(clearTimeout);
+    logsTimersRef.current = [];
+    const t1 = setTimeout(() => setLogsPhase("freeze"), 0);
+    const t2 = setTimeout(() => setLogsPhase("fading"), 50);
+    const t3 = setTimeout(() => setLogsPhase("hidden"), 1700);
+    logsTimersRef.current = [t1, t2, t3];
+  }
+
+  // reveal decorative log panels shortly after boot, then auto-fade them out
   useEffect(() => {
     if (!desktopBooted) return;
-    const t = setTimeout(() => setShowLogs(true), 600);
-    return () => clearTimeout(t);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    timers.push(setTimeout(() => setLogsPhase("visible"), 600));
+    logsTimersRef.current = timers;
+    return () => timers.forEach(clearTimeout);
   }, [desktopBooted]);
 
   return (
     <div className="relative flex-1 flex flex-col items-center" ref={screenRef}>
 
       {/* Decorative log panels */}
-      {showLogs && (
+      {logsPhase !== "hidden" && (
         <>
           <DraggableWindow
             screenRef={screenRef}
             defaultWidth={DEFAULT_DOCKER_SIZE.width}
             defaultHeight={DEFAULT_DOCKER_SIZE.height}
             getInitialPos={DEFAULT_DOCKER_POS}
-            style={{ animationDelay: "1s" }}
+            style={logsPhase === "visible"
+              ? { animationDelay: "0s" }
+              : logsPhase === "freeze"
+                ? { animation: "none", opacity: 1 }
+                : { animation: "none", opacity: 0, transition: "opacity 1000ms ease", pointerEvents: "none" }
+            }
           >
             {(bag) => <DockerLogs {...bag} />}
           </DraggableWindow>
@@ -62,7 +85,12 @@ export default function Home() {
             defaultWidth={DEFAULT_TRANSACTIONS_SIZE.width}
             defaultHeight={DEFAULT_TRANSACTIONS_SIZE.height}
             getInitialPos={DEFAULT_TRANSACTIONS_POS}
-            style={{ animationDelay: "4s", animationFillMode: "both" }}
+            style={logsPhase === "visible"
+              ? { animationDelay: "3s", animationFillMode: "both" }
+              : logsPhase === "freeze"
+                ? { animation: "none", opacity: 1 }
+                : { animation: "none", opacity: 0, transition: "opacity 1000ms ease", pointerEvents: "none" }
+            }
           >
             {(bag) => <TransactionsLogs {...bag} />}
           </DraggableWindow>
@@ -83,12 +111,28 @@ export default function Home() {
                 height={height}
                 onDragHandleMouseDown={onDragHandleMouseDown}
                 isDragging={isDragging}
+                skipIntro={introPlayed}
+                onIntroComplete={() => {
+                  sessionStorage.setItem("introPlayed", "1");
+                  setIntroPlayed(true);
+                }}
                 externalCommands={[
                   {
                     key: "boot",
                     description: "boot the desktop environment",
                     output: () => <span className="text-zinc-400">Booting desktop environment…</span>,
                     action: () => setDesktopBooted(true),
+                  },
+                  {
+                    key: "close",
+                    description: "close all windows",
+                    action: () => {
+                      sessionStorage.setItem("introPlayed", "1");
+                      setIntroPlayed(true);
+                      triggerLogsFade();
+                      setTimeout(() => setTerminalState("closed"), 400);
+                    },
+                    output: () => <span className="text-zinc-400">Closing all windows…</span>,
                   },
                 ]}
                 onClose={() => setTerminalState("closed")}
@@ -103,6 +147,16 @@ export default function Home() {
       {desktopBooted && (
         <div className="relative flex flex-1 w-full transition-opacity duration-1000 animate-fade-in">
           <Wallpaper />
+          <Taskbar items={
+            [{
+              id: "terminal",
+              icon: TerminalIcon,
+              label: "Terminal",
+              isActive: terminalState === "visible",
+              onClick: handleTerminalTaskbarClick,
+            },
+            ]
+          } />
         </div>)
       }
     </div >
