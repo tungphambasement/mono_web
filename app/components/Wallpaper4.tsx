@@ -24,6 +24,8 @@ const MIN_SOURCE_DIST = spacing * 6; // tune this
 
 
 const DIRECTIONS = [[0, -1], [1, 0], [0, 1], [-1, 0]]; // up, right, down, left
+// const DIRECTIONS = [[-1, -1], [1, -1], [1, 1], [-1, 1]]; // diagonals
+// const DIRECTIONS = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [1, 1], [-1, 1]]; // all 8 directions
 
 export default function Wallpaper3() {
   const [dots, setDots] = useState<Dot[]>([]);
@@ -102,18 +104,21 @@ export default function Wallpaper3() {
       // for each direction find a candidate child
       for (let i = 0; i < DIRECTIONS.length; i++) {
         const [dx, dy] = DIRECTIONS[i];
-        if (Math.random() > 0.7) continue; // randomly skip some directions to create a more organic look
+        if (Math.random() > 0.75) continue; // randomly skip some directions to create a more organic look
 
         const validCandidates = rawNodes.filter(
           (c) => {
             const d = Math.abs(c.x - currentDot.x) + Math.abs(c.y - currentDot.y);
             if (d > MAX_REACH) return false;
             if (c.gen !== -1) return false;
-            if (dx !== 0 && c.y !== currentDot.y) return false;
-            if (dy !== 0 && c.x !== currentDot.x) return false;
-            if (Math.sign(c.x - currentDot.x) !== dx) return false;
-            if (Math.sign(c.y - currentDot.y) !== dy) return false;
-            return true;
+            const vx = c.x - currentDot.x;
+            const vy = c.y - currentDot.y;
+
+            const isCollinear = (vx * dy - vy * dx) === 0;
+
+            const isSameDirection = (vx * dx + vy * dy) > 0;
+
+            return isCollinear && isSameDirection;
           }
         );
         if (validCandidates.length === 0) continue;
@@ -128,6 +133,9 @@ export default function Wallpaper3() {
         const angle = Math.atan2(ty, tx) * (180 / Math.PI);
         const dist = Math.hypot(tx, ty);
 
+        // trail probability increase by generation and decrease by distance but clamped to a max of 0.15 and min of 0.
+        const hasTrailProb = Math.min(0.15, Math.max(0, 0.06 + child.gen * 0.02 - dist * 0.001));
+
         queue.push({
           id: `y:${child.y}-x:${child.x}`,
           x: child.x,
@@ -135,7 +143,7 @@ export default function Wallpaper3() {
           gen: child.gen,
           dist,
           angle,
-          hasTrail: Math.random() > 0.8,
+          hasTrail: Math.random() < hasTrailProb,
         } as Dot);
       }
     }
