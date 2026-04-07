@@ -18,16 +18,16 @@ interface CustomStyle extends React.CSSProperties {
 
 const spacing = 40;
 const MAX_REACH = spacing * 2;
-const NUM_SOURCE_DOTS = 5;
+const NUM_SOURCE_DOTS = 10;
 const DOT_SIZE = 3;
-const MIN_SOURCE_DIST = spacing * 6; // tune this
-
 
 const DIRECTIONS = [[0, -1], [1, 0], [0, 1], [-1, 0]]; // up, right, down, left
 // const DIRECTIONS = [[-1, -1], [1, -1], [1, 1], [-1, 1]]; // diagonals
 // const DIRECTIONS = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [1, 1], [-1, 1]]; // all 8 directions
 
-export default function Wallpaper3() {
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5)); // ~2.399 radians / ~137.5°
+
+export default function Wallpaper4() {
   const [dots, setDots] = useState<Dot[]>([]);
   const [lastGen, setLastGen] = useState(0);
   const rectRef = React.useRef<HTMLDivElement>(null);
@@ -40,8 +40,8 @@ export default function Wallpaper3() {
     const screenCenterX = Math.round(rect.width / 2);
     const screenCenterY = Math.round(rect.height / 2);
 
-    const stepsX = Math.ceil(screenCenterX / spacing);
-    const stepsY = Math.ceil(screenCenterY / spacing);
+    const stepsX = Math.floor(screenCenterX / spacing);
+    const stepsY = Math.floor(screenCenterY / spacing);
 
     const rawNodes: { x: number; y: number; gen: number }[] = [];
 
@@ -51,29 +51,34 @@ export default function Wallpaper3() {
         const x = screenCenterX + j * spacing;
         const y = screenCenterY + i * spacing;
         if (Math.sqrt((x - screenCenterX) ** 2 + (y - screenCenterY) ** 2) > MAX_DIST) continue;
-
-        rawNodes.push({
-          x,
-          y,
-          gen: -1,
-        });
+        rawNodes.push({ x, y, gen: -1 });
       }
     }
 
-
-    // generate source dots
+    // sample ideal source positions using the golden spiral, then snap each
+    // one to the nearest available grid node.
+    const maxR = Math.min(rect.width, rect.height) * 0.55;
+    const usedIds = new Set<string>();
     const sourceDots: typeof rawNodes = [];
 
-    const shuffled = [...rawNodes].sort(() => {
-      return Math.random() - 0.5 > 0 ? 1 : -1;
-    });
+    for (let i = 0; i < NUM_SOURCE_DOTS; i++) {
+      const r = maxR * Math.sqrt((i + 1) / NUM_SOURCE_DOTS);
+      const theta = i * GOLDEN_ANGLE;
+      const idealX = screenCenterX + r * Math.cos(theta);
+      const idealY = screenCenterY + r * Math.sin(theta);
 
-    for (const node of shuffled) {
-      if (sourceDots.length >= NUM_SOURCE_DOTS) break;
-      const tooClose = sourceDots.some(s =>
-        Math.hypot(s.x - node.x, s.y - node.y) < MIN_SOURCE_DIST
-      );
-      if (!tooClose) sourceDots.push(node);
+      // snap to nearest unused grid node
+      let best: typeof rawNodes[0] | null = null;
+      let bestDist = Infinity;
+      for (const node of rawNodes) {
+        if (usedIds.has(`${node.x},${node.y}`)) continue;
+        const d = Math.hypot(node.x - idealX, node.y - idealY);
+        if (d < bestDist) { bestDist = d; best = node; }
+      }
+      if (best) {
+        usedIds.add(`${best.x},${best.y}`);
+        sourceDots.push(best);
+      }
     }
 
     const queue: Dot[] = [];
@@ -101,10 +106,13 @@ export default function Wallpaper3() {
 
       networkDots.push(currentDot);
 
-      // for each direction find a candidate child
       for (let i = 0; i < DIRECTIONS.length; i++) {
         const [dx, dy] = DIRECTIONS[i];
-        if (Math.random() > 0.75) continue; // randomly skip some directions to create a more organic look
+
+        // bias propagation away from center
+        const dotProduct = dx * (currentDot.x - screenCenterX) + dy * (currentDot.y - screenCenterY);
+        const outwardBias = dotProduct > 0 ? 0.85 : 0.55;
+        if (Math.random() > outwardBias) continue;
 
         const validCandidates = rawNodes.filter(
           (c) => {
@@ -113,17 +121,13 @@ export default function Wallpaper3() {
             if (c.gen !== -1) return false;
             const vx = c.x - currentDot.x;
             const vy = c.y - currentDot.y;
-
             const isCollinear = (vx * dy - vy * dx) === 0;
-
             const isSameDirection = (vx * dx + vy * dy) > 0;
-
             return isCollinear && isSameDirection;
           }
         );
         if (validCandidates.length === 0) continue;
 
-        // pick a random candidate from the valid ones
         const targetIdx = Math.round(Math.random() * (validCandidates.length - 1));
         const child = validCandidates[targetIdx];
         child.gen = currentDot.gen + 1;
@@ -133,7 +137,7 @@ export default function Wallpaper3() {
         const angle = Math.atan2(ty, tx) * (180 / Math.PI);
         const dist = Math.hypot(tx, ty);
 
-        // trail probability increase by generation and decrease by distance but clamped to a max of 0.15 and min of 0.
+        // trail probability increases with generation, decreases with distance
         const hasTrailProb = Math.min(0.15, Math.max(0, 0.06 + child.gen * 0.02 - dist * 0.001));
 
         queue.push({
@@ -147,8 +151,6 @@ export default function Wallpaper3() {
         } as Dot);
       }
     }
-
-    console.log(networkDots);
 
     setDots(networkDots);
     setLastGen(localLastGen);
@@ -213,9 +215,9 @@ export default function Wallpaper3() {
   const mask = `radial-gradient(
     circle at center, 
     black 0%, 
-    black 15%, 
-    rgba(0,0,0,0.3) 40%, 
-    transparent 80%
+    black 40%, 
+    rgba(0,0,0,0.3) 60%, 
+    transparent 85%
   )`;
 
   return (
@@ -232,7 +234,7 @@ export default function Wallpaper3() {
         {dots.map((dot) => (
           <div
             key={dot.id}
-            className={`absolute bg-zinc-300 ${dot.dist === 0 && dot.gen !== 0 ? 'hidden' : ''}`}
+            className={`absolute bg-white ${dot.dist === 0 && dot.gen !== 0 ? 'hidden' : ''}`}
             style={{
               left: dot.x - DOT_SIZE / 2,
               top: dot.y - DOT_SIZE / 2,
