@@ -47,13 +47,13 @@ const SCRIPT: ScriptEntry[] = [
   {
     command: "boot --desktop",
     outputSegments: [{ text: "Booting desktop environment\u2026", className: "text-zinc-400" }],
-    pauseAfterExecution: 5000,
+    pauseAfterExecution: 1000,
   },
   {
     command: "finalize --environment",
     outputSegments: [{ text: "Welcome user 8995\u2026", className: "text-zinc-500" }],
     pauseAfterCmd: 1000,
-    pauseAfterExecution: 2000,
+    pauseAfterExecution: 1000,
   },
 ];
 

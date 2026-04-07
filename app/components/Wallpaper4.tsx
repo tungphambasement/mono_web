@@ -1,0 +1,244 @@
+import React, { useEffect, useState } from 'react';
+
+type Dot = {
+  id: string;
+  x: number;
+  y: number;
+  gen: number;
+  dist: number;
+  angle: number;
+  hasTrail: boolean;
+};
+
+interface CustomStyle extends React.CSSProperties {
+  '--dist': string;
+  '--scale-x': number;
+  '--angle': string;
+}
+
+const spacing = 40;
+const MAX_REACH = spacing * 2;
+const NUM_SOURCE_DOTS = 5;
+const DOT_SIZE = 3;
+const MIN_SOURCE_DIST = spacing * 6; // tune this
+
+
+const DIRECTIONS = [[0, -1], [1, 0], [0, 1], [-1, 0]]; // up, right, down, left
+
+export default function Wallpaper3() {
+  const [dots, setDots] = useState<Dot[]>([]);
+  const [lastGen, setLastGen] = useState(0);
+  const rectRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!rectRef.current) return;
+    const rect = rectRef.current.getBoundingClientRect();
+    const MAX_DIST = Math.sqrt(rect.width ** 2 + rect.height ** 2) * 0.4;
+
+    const screenCenterX = Math.round(rect.width / 2);
+    const screenCenterY = Math.round(rect.height / 2);
+
+    const stepsX = Math.ceil(screenCenterX / spacing);
+    const stepsY = Math.ceil(screenCenterY / spacing);
+
+    const rawNodes: { x: number; y: number; gen: number }[] = [];
+
+    // generate a grid of candidate points
+    for (let i = -stepsY; i <= stepsY; i++) {
+      for (let j = -stepsX; j <= stepsX; j++) {
+        const x = screenCenterX + j * spacing;
+        const y = screenCenterY + i * spacing;
+        if (Math.sqrt((x - screenCenterX) ** 2 + (y - screenCenterY) ** 2) > MAX_DIST) continue;
+
+        rawNodes.push({
+          x,
+          y,
+          gen: -1,
+        });
+      }
+    }
+
+
+    // generate source dots
+    const sourceDots: typeof rawNodes = [];
+
+    const shuffled = [...rawNodes].sort(() => {
+      return Math.random() - 0.5 > 0 ? 1 : -1;
+    });
+
+    for (const node of shuffled) {
+      if (sourceDots.length >= NUM_SOURCE_DOTS) break;
+      const tooClose = sourceDots.some(s =>
+        Math.hypot(s.x - node.x, s.y - node.y) < MIN_SOURCE_DIST
+      );
+      if (!tooClose) sourceDots.push(node);
+    }
+
+    const queue: Dot[] = [];
+
+    sourceDots.forEach((rawDot) => {
+      rawDot.gen = 0;
+      queue.push({
+        id: `y:${rawDot.y}-x:${rawDot.x}`,
+        x: rawDot.x,
+        y: rawDot.y,
+        gen: 0,
+        dist: 0,
+        angle: 0,
+        hasTrail: true,
+      });
+    });
+
+    const networkDots: Dot[] = [];
+    let localLastGen = 0;
+
+    // child collapse towards parents, then move outwards in the assigned angle
+    while (queue.length > 0) {
+      const currentDot = queue.shift()!;
+      localLastGen = Math.max(localLastGen, currentDot.gen);
+
+      networkDots.push(currentDot);
+
+      // for each direction find a candidate child
+      for (let i = 0; i < DIRECTIONS.length; i++) {
+        const [dx, dy] = DIRECTIONS[i];
+        if (Math.random() > 0.7) continue; // randomly skip some directions to create a more organic look
+
+        const validCandidates = rawNodes.filter(
+          (c) => {
+            const d = Math.abs(c.x - currentDot.x) + Math.abs(c.y - currentDot.y);
+            if (d > MAX_REACH) return false;
+            if (c.gen !== -1) return false;
+            if (dx !== 0 && c.y !== currentDot.y) return false;
+            if (dy !== 0 && c.x !== currentDot.x) return false;
+            if (Math.sign(c.x - currentDot.x) !== dx) return false;
+            if (Math.sign(c.y - currentDot.y) !== dy) return false;
+            return true;
+          }
+        );
+        if (validCandidates.length === 0) continue;
+
+        // pick a random candidate from the valid ones
+        const targetIdx = Math.round(Math.random() * (validCandidates.length - 1));
+        const child = validCandidates[targetIdx];
+        child.gen = currentDot.gen + 1;
+
+        const tx = currentDot.x - child.x;
+        const ty = currentDot.y - child.y;
+        const angle = Math.atan2(ty, tx) * (180 / Math.PI);
+        const dist = Math.hypot(tx, ty);
+
+        queue.push({
+          id: `y:${child.y}-x:${child.x}`,
+          x: child.x,
+          y: child.y,
+          gen: child.gen,
+          dist,
+          angle,
+          hasTrail: Math.random() > 0.8,
+        } as Dot);
+      }
+    }
+
+    console.log(networkDots);
+
+    setDots(networkDots);
+    setLastGen(localLastGen);
+  }, []);
+
+  const D = 0.6;
+  const TotalTime = (lastGen + 2) * 2 * D;
+
+  const renderKeyframes = () => {
+    if (lastGen === 0) return null;
+
+    let css = `
+      @property --scale-x { syntax: "<number>"; inherits: false; initial-value: 1; }
+      @property --dist { syntax: "<length>"; inherits: false; initial-value: 0px; }
+      @property --angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+    `;
+
+    for (let K = 0; K <= lastGen; K++) {
+      const P = (time: number) => ((time * D) / TotalTime) * 100;
+      const L = lastGen;
+
+      const collapseStart = L - K;
+      const collapseMid = collapseStart + 0.5;
+      const collapseEnd = collapseStart + 1;
+
+      const expandStart = L + 2 + K;
+      const expandMid = expandStart + 0.5;
+      const expandEnd = expandStart + 1;
+
+      css += `
+        @keyframes layer-anim-${K} {
+          0%, ${P(collapseStart)}% {
+            transform: rotate(var(--angle)) translateX(-50%) scaleX(1);
+            opacity: 0.5;
+            animation-timing-function: ease-in;
+          }
+          ${P(collapseMid)}% {
+            transform: rotate(var(--angle)) translateX(-50%) scaleX(var(--scale-x));
+            opacity: 1;
+            animation-timing-function: ease-out;
+          }
+          ${P(collapseEnd)}%, ${P(expandStart)}% {
+            transform: rotate(var(--angle)) translateX(calc(-50% + var(--dist))) scaleX(1);
+            opacity: 0;
+            animation-timing-function: ease-in;
+          }
+          ${P(expandMid)}% {
+            transform: rotate(var(--angle)) translateX(-50%) scaleX(var(--scale-x));
+            opacity: 1;
+            animation-timing-function: ease-out;
+          }
+          ${P(expandEnd)}%, 100% {
+            transform: rotate(var(--angle)) translateX(-50%) scaleX(1);
+            opacity: 0.5;
+          }
+        }
+      `;
+    }
+    return <style>{css}</style>;
+  };
+
+  const mask = `radial-gradient(
+    circle at center, 
+    black 0%, 
+    black 15%, 
+    rgba(0,0,0,0.3) 40%, 
+    transparent 80%
+  )`;
+
+  return (
+    <div className="absolute inset-0 w-full h-full -z-10 overflow-hidden bg-zinc-950" ref={rectRef}>
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          WebkitMaskImage: mask,
+          maskImage: mask,
+        }}
+      >
+        {renderKeyframes()}
+
+        {dots.map((dot) => (
+          <div
+            key={dot.id}
+            className={`absolute bg-zinc-300 ${dot.dist === 0 && dot.gen !== 0 ? 'hidden' : ''}`}
+            style={{
+              left: dot.x - DOT_SIZE / 2,
+              top: dot.y - DOT_SIZE / 2,
+              width: `${DOT_SIZE}px`,
+              height: `${DOT_SIZE}px`,
+              transformOrigin: 'left center',
+              '--dist': `${dot.dist}px`,
+              '--scale-x': dot.hasTrail ? dot.dist / DOT_SIZE : 1,
+              '--angle': `${dot.angle}deg`,
+              animation: `layer-anim-${dot.gen} ${TotalTime}s infinite`,
+            } as CustomStyle}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}

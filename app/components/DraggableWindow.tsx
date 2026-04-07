@@ -120,7 +120,7 @@ export default function DraggableWindow({
   return (
     pos && (
       <div
-        className="fixed z-50 animate-fade-in"
+        className="fixed z-50 animate-fade-in transition-opacity duration-200"
         style={{
           left: pos.x,
           top: pos.y,

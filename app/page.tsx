@@ -6,23 +6,23 @@ import Terminal from "./components/Terminal";
 import Wallpaper from "./components/Wallpaper3";
 import Wallpaper2 from "./components/Wallpaper2";
 import Wallpaper3 from "./components/Wallpaper3";
+import Wallpaper4 from "./components/Wallpaper4";
 import DockerLogs from "./components/DockerLogs";
 import TransactionsLogs from "./components/TransactionsLogs";
 import Taskbar from "./components/Taskbar";
 import TerminalShortcut from "./components/TerminalShortcut";
 import { useTaskbarState } from "./hooks/useTaskbarState";
+import HeroSection from "./components/HeroSection";
 
 
 type TerminalState = "visible" | "minimized" | "closed";
 
 const DEFAULT_TERMINAL_STATE: TerminalState = "visible";
 const DEFAULT_TERMINAL_SIZE = { width: 500, height: 240 };
-const DEFAULT_TERMINAL_POS = (rect: DOMRect) => ({ x: rect.left + (rect.width * 0.1), y: rect.top + (rect.height * 1 / 4 - DEFAULT_TERMINAL_SIZE.height * 0.5) });
-const DEFAULT_DOCKER_SIZE = { width: 440, height: 300 };
-const DEFAULT_DOCKER_POS = (rect: DOMRect) => ({ x: rect.left + (rect.width * 0.05), y: rect.top + (rect.height * 0.5 - DEFAULT_DOCKER_SIZE.height * 0.5) });
-const DEFAULT_TRANSACTIONS_SIZE = { width: 520, height: 280 };
-const DEFAULT_TRANSACTIONS_POS = (rect: DOMRect) => ({ x: rect.left + (rect.width * 0.15), y: rect.top + (rect.height * 2 / 3 - DEFAULT_TRANSACTIONS_SIZE.height * 0.5) });
 
+const WINDOW_CLOSE_ANIMATION_DURATION = 200;
+
+const DEFAULT_TERMINAL_POS = (rect: DOMRect) => ({ x: rect.left + (rect.width * 0.1), y: rect.top + (rect.height * 1 / 4 - DEFAULT_TERMINAL_SIZE.height * 0.5) });
 export default function Home() {
   const [desktopBooted, setDesktopBooted] = useState(false);
   const [terminalState, setTerminalState] = useState<TerminalState>(DEFAULT_TERMINAL_STATE);
@@ -68,41 +68,6 @@ export default function Home() {
 
   return (
     <div className="relative flex-1 flex flex-col items-center" ref={screenRef}>
-
-      {/* Decorative log panels */}
-      {logsPhase !== "hidden" && (
-        <>
-          <DraggableWindow
-            screenRef={screenRef}
-            defaultWidth={DEFAULT_DOCKER_SIZE.width}
-            defaultHeight={DEFAULT_DOCKER_SIZE.height}
-            getInitialPos={DEFAULT_DOCKER_POS}
-            style={logsPhase === "visible"
-              ? { animationDelay: "0s" }
-              : logsPhase === "freeze"
-                ? { animation: "none", opacity: 1 }
-                : { animation: "none", opacity: 0, transition: "opacity 400ms ease", pointerEvents: "none" }
-            }
-          >
-            {(bag) => <DockerLogs {...bag} />}
-          </DraggableWindow>
-
-          <DraggableWindow
-            screenRef={screenRef}
-            defaultWidth={DEFAULT_TRANSACTIONS_SIZE.width}
-            defaultHeight={DEFAULT_TRANSACTIONS_SIZE.height}
-            getInitialPos={DEFAULT_TRANSACTIONS_POS}
-            style={logsPhase === "visible"
-              ? { animationDelay: "3s", animationFillMode: "both" }
-              : logsPhase === "freeze"
-                ? { animation: "none", opacity: 1 }
-                : { animation: "none", opacity: 0, transition: "opacity 400ms ease", pointerEvents: "none" }
-            }
-          >
-            {(bag) => <TransactionsLogs {...bag} />}
-          </DraggableWindow>
-        </>
-      )}
 
       {/* Draggable terminal — hidden (not unmounted) when minimized */}
       {terminalState !== "closed" && (
@@ -162,8 +127,8 @@ export default function Home() {
 
       {/* Desktop environment */}
       {desktopBooted && (
-        <div className="relative flex flex-1 w-full transition-opacity duration-1000 animate-fade-in">
-          <Wallpaper3 />
+        <div className="relative items-center justify-center flex flex-1 w-full transition-opacity duration-2000 animate-fade-in">
+          <Wallpaper4 />
           <Taskbar items={
             [{
               id: "terminal",
@@ -175,6 +140,9 @@ export default function Home() {
             },
             ]
           } />
+          <div className="relative z-10">
+            <HeroSection />
+          </div>
         </div>)
       }
     </div >
