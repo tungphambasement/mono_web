@@ -114,7 +114,7 @@ export default function Home() {
                         taskbar.close("terminal");
                       }, 450);
                     },
-                    output: () => <span className="text-zinc-400">Welcome user 8995...</span>,
+                    output: () => <span className="text-zinc-400">Welcome user 8995…</span>,
                   },
                 ]}
                 onClose={() => { setTerminalState("closed"); taskbar.close("terminal"); }}
@@ -128,7 +128,7 @@ export default function Home() {
       {/* Desktop environment */}
       {desktopBooted && (
         <div className="relative items-center justify-center flex flex-1 w-full transition-opacity duration-2000 animate-fade-in">
-          <Wallpaper4 />
+          {/* <Wallpaper4 /> */}
           <Taskbar items={
             [{
               id: "terminal",

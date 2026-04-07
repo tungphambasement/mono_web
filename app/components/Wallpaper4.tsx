@@ -7,6 +7,7 @@ type Dot = {
   gen: number;
   dist: number;
   angle: number;
+  delay: number;
   hasTrail: boolean;
 };
 
@@ -18,8 +19,10 @@ interface CustomStyle extends React.CSSProperties {
 
 const spacing = 40;
 const MAX_REACH = spacing * 2;
-const NUM_SOURCE_DOTS = 10;
+const NUM_SOURCE_DOTS = 12;
 const DOT_SIZE = 3;
+const D = 0.6;
+
 
 const DIRECTIONS = [[0, -1], [1, 0], [0, 1], [-1, 0]]; // up, right, down, left
 // const DIRECTIONS = [[-1, -1], [1, -1], [1, 1], [-1, 1]]; // diagonals
@@ -35,7 +38,7 @@ export default function Wallpaper4() {
   useEffect(() => {
     if (!rectRef.current) return;
     const rect = rectRef.current.getBoundingClientRect();
-    const MAX_DIST = Math.sqrt(rect.width ** 2 + rect.height ** 2) * 0.4;
+    const MAX_DIST = Math.sqrt(rect.width ** 2 + rect.height ** 2) * 0.35;
 
     const screenCenterX = Math.round(rect.width / 2);
     const screenCenterY = Math.round(rect.height / 2);
@@ -92,6 +95,7 @@ export default function Wallpaper4() {
         gen: 0,
         dist: 0,
         angle: 0,
+        delay: 0,
         hasTrail: true,
       });
     });
@@ -111,7 +115,7 @@ export default function Wallpaper4() {
 
         // bias propagation away from center
         const dotProduct = dx * (currentDot.x - screenCenterX) + dy * (currentDot.y - screenCenterY);
-        const outwardBias = dotProduct > 0 ? 0.85 : 0.55;
+        const outwardBias = dotProduct > 0 ? 0.85 : 0.6;
         if (Math.random() > outwardBias) continue;
 
         const validCandidates = rawNodes.filter(
@@ -147,6 +151,7 @@ export default function Wallpaper4() {
           gen: child.gen,
           dist,
           angle,
+          delay: (Math.random() - 0.5) * D, // between -0.3 and 0.3 seconds
           hasTrail: Math.random() < hasTrailProb,
         } as Dot);
       }
@@ -154,9 +159,10 @@ export default function Wallpaper4() {
 
     setDots(networkDots);
     setLastGen(localLastGen);
+
+    console.log(`Generated ${networkDots.length} dots across ${localLastGen} generations.`);
   }, []);
 
-  const D = 0.6;
   const TotalTime = (lastGen + 2) * 2 * D;
 
   const renderKeyframes = () => {
@@ -180,31 +186,38 @@ export default function Wallpaper4() {
       const expandMid = expandStart + 0.5;
       const expandEnd = expandStart + 1;
 
+
       css += `
         @keyframes layer-anim-${K} {
           0%, ${P(collapseStart)}% {
             transform: rotate(var(--angle)) translateX(-50%) scaleX(1);
             opacity: 0.5;
             animation-timing-function: ease-in;
+            border-radius: ${DOT_SIZE / 2}px;
           }
           ${P(collapseMid)}% {
             transform: rotate(var(--angle)) translateX(-50%) scaleX(var(--scale-x));
             opacity: 1;
             animation-timing-function: ease-out;
+            border-radius: ${DOT_SIZE / 2}px;
           }
           ${P(collapseEnd)}%, ${P(expandStart)}% {
             transform: rotate(var(--angle)) translateX(calc(-50% + var(--dist))) scaleX(1);
             opacity: 0;
             animation-timing-function: ease-in;
+            border-radius: ${DOT_SIZE / 2}px;
           }
           ${P(expandMid)}% {
             transform: rotate(var(--angle)) translateX(-50%) scaleX(var(--scale-x));
             opacity: 1;
             animation-timing-function: ease-out;
+            border-radius: ${DOT_SIZE / 2}px;
           }
           ${P(expandEnd)}%, 100% {
             transform: rotate(var(--angle)) translateX(-50%) scaleX(1);
             opacity: 0.5;
+            animation-timing-function: ease-in;
+            border-radius: ${DOT_SIZE / 2}px;
           }
         }
       `;
@@ -245,6 +258,7 @@ export default function Wallpaper4() {
               '--scale-x': dot.hasTrail ? dot.dist / DOT_SIZE : 1,
               '--angle': `${dot.angle}deg`,
               animation: `layer-anim-${dot.gen} ${TotalTime}s infinite`,
+              animationDelay: `${dot.delay}s`,
             } as CustomStyle}
           />
         ))}
