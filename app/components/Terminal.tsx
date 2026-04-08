@@ -50,7 +50,7 @@ const SCRIPT: ScriptEntry[] = [
   },
   {
     command: "finalize --environment",
-    outputSegments: [{ text: "Welcome user 8995…", className: "text-zinc-500" }],
+    outputSegments: [{ text: "Welcome user 8995…", className: "text-zinc-400" }],
   },
 ];
 

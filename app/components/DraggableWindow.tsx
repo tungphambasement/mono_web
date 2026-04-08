@@ -30,6 +30,7 @@ export default function DraggableWindow({
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [size, setSize] = useState({ width: defaultWidth, height: defaultHeight });
   const [isDragging, setIsDragging] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const sizeRef = useRef(size);
   sizeRef.current = size;
@@ -51,7 +52,7 @@ export default function DraggableWindow({
         ? getInitialPos(rect)
         : { x: rect.left + rect.width * 0.1, y: rect.top + rect.height * 0.1 }
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    requestAnimationFrame(() => setMounted(true));
   }, [screenRef]);
 
   useEffect(() => {
@@ -120,12 +121,14 @@ export default function DraggableWindow({
   return (
     pos && (
       <div
-        className="fixed z-50 animate-fade-in transition-opacity duration-200"
+        className="fixed z-50"
         style={{
           left: pos.x,
           top: pos.y,
           width: size.width,
           willChange: "left, top, width",
+          opacity: mounted ? 1 : 0,
+          transition: "opacity 0.6s ease",
           ...style,
         }}
       >

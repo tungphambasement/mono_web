@@ -15,7 +15,7 @@ import { useTaskbarState } from "./hooks/useTaskbarState";
 import HeroSection from "./components/HeroSection";
 
 
-type TerminalState = "visible" | "minimized" | "closed";
+type TerminalState = "visible" | "minimized" | "closed" | "closing";
 
 const DEFAULT_TERMINAL_STATE: TerminalState = "visible";
 const DEFAULT_TERMINAL_SIZE = { width: 500, height: 240 };
@@ -26,6 +26,15 @@ const DEFAULT_TERMINAL_POS = (rect: DOMRect) => ({ x: rect.left + (rect.width * 
 export default function Home() {
   const [desktopBooted, setDesktopBooted] = useState(false);
   const [terminalState, setTerminalState] = useState<TerminalState>(DEFAULT_TERMINAL_STATE);
+  const [isClosingVisible, setIsClosingVisible] = useState(false);
+
+  useEffect(() => {
+    if (terminalState === "closing") {
+      const frame = requestAnimationFrame(() => setIsClosingVisible(true));
+      return () => cancelAnimationFrame(frame);
+    }
+    setIsClosingVisible(false);
+  }, [terminalState]);
   const taskbar = useTaskbarState(["terminal"]);
   const [logsPhase, setLogsPhase] = useState<"hidden" | "visible" | "freeze" | "fading">("hidden");
   const [introPlayed, setIntroPlayed] = useState(
@@ -33,6 +42,12 @@ export default function Home() {
   );
   const screenRef = useRef<HTMLDivElement>(null);
   const logsTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  function handleTerminalClose() {
+    setTerminalState("closing");
+    taskbar.close("terminal");
+    setTimeout(() => setTerminalState("closed"), 280);
+  }
 
   function handleTerminalTaskbarClick() {
     if (terminalState === "closed") {
@@ -70,7 +85,7 @@ export default function Home() {
     <div className="relative flex-1 flex flex-col items-center" ref={screenRef}>
 
       {/* Draggable terminal — hidden (not unmounted) when minimized */}
-      {terminalState !== "closed" && (
+      {(terminalState === "visible" || terminalState === "minimized" || terminalState === "closing") && (
         <div style={terminalState === "minimized" ? { display: "none" } : undefined}>
           <DraggableWindow
             screenRef={screenRef}
@@ -78,11 +93,13 @@ export default function Home() {
             defaultHeight={DEFAULT_TERMINAL_SIZE.height}
             getInitialPos={DEFAULT_TERMINAL_POS}
             style={
-              logsPhase === "fading"
-                ? { opacity: 0, transition: "opacity 400ms ease", pointerEvents: "none" }
-                : logsPhase === "freeze"
-                  ? { opacity: 1 }
-                  : undefined
+              terminalState === "closing"
+                ? { opacity: isClosingVisible ? 0 : 1, transform: isClosingVisible ? "scale(0.93)" : "scale(1)", transition: "opacity 250ms ease, transform 250ms ease", pointerEvents: "none" }
+                : logsPhase === "fading"
+                  ? { opacity: 0, transition: "opacity 400ms ease", pointerEvents: "none" }
+                  : logsPhase === "freeze"
+                    ? { opacity: 1 }
+                    : undefined
             }
           >
             {({ onDragHandleMouseDown, isDragging, height }) => (
@@ -117,7 +134,7 @@ export default function Home() {
                     output: () => <span className="text-zinc-400">Welcome user 8995…</span>,
                   },
                 ]}
-                onClose={() => { setTerminalState("closed"); taskbar.close("terminal"); }}
+                onClose={handleTerminalClose}
                 onMinimize={() => { setTerminalState("minimized"); taskbar.blur(); }}
               />
             )}
