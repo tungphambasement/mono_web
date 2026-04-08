@@ -144,8 +144,9 @@ export default function Home() {
 
       {/* Desktop environment */}
       {desktopBooted && (
-        <div className="relative items-center justify-center flex flex-1 w-full transition-opacity duration-2000 animate-fade-in">
-          {/* <Wallpaper4 /> */}
+        <div
+          className="relative items-center justify-center flex flex-1 w-full transition-opacity duration-2000 animate-fade-in"
+        >
           <Taskbar items={
             [{
               id: "terminal",
@@ -157,7 +158,13 @@ export default function Home() {
             },
             ]
           } />
-          <HeroSection />
+          <div
+            className="flex flex-1 w-full items-center justify-center"
+            style={{
+              background: 'radial-gradient(ellipse 65% 55% at 50% 65%, #0c1e3d 0%, #04080f 55%, var(--background) 90%)'
+            }}>
+            <HeroSection />
+          </div>
         </div>)
       }
     </div >

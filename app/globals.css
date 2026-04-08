@@ -6,6 +6,13 @@
   scrollbar-gutter: stable;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: var(--color-zinc-950);
+    --foreground: #ededed;
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -61,13 +68,6 @@
 
   50% {
     opacity: 0;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
   }
 }
 

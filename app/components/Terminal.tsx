@@ -54,10 +54,10 @@ const SCRIPT: ScriptEntry[] = [
   },
 ];
 
-const PROMPT_SPEED = 60;
+const PROMPT_SPEED = 50;
 const OUTPUT_SPEED = 30;
 const PAUSE_AFTER_TYPE = 150;
-const PAUSE_AFTER_CMD = 400;
+const PAUSE_AFTER_CMD = 300;
 const PAUSE_AFTER_EXECUTION = 100;
 
 //  Command Definitions 

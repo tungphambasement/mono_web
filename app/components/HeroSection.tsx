@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 //  Config 
 
@@ -22,7 +23,7 @@ const CARDS: Card[] = [
   { id: 6, url: null, label: "Placeholder" },
 ];
 
-const AUTO_ADVANCE_MS = 4000;
+const AUTO_ADVANCE_MS = 5000;
 const PHRASE_MS = 2500;
 
 // Card height as a fraction of viewport height; width derived from window aspect ratio
@@ -166,24 +167,22 @@ export default function HeroSection() {
         onPointerUp={handlePointerUp}
         onPointerLeave={() => { dragStartX.current = null; }}
       >
-        {/* Left arrow */}
+        {/* Left Button */}
         <button
           onClick={(e) => { e.stopPropagation(); navigate(-1); }}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full hover:bg-white/25 border border-white/20 flex items-center justify-center text-white text-lg transition-colors backdrop-blur-sm"
-          style={{ cursor: "pointer" }}
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full flex items-center justify-center text-white/50 transition-all duration-300 hover:bg-white/10 hover:text-white hover:backdrop-blur-md active:scale-95 cursor-pointer group/btn"
           aria-label="Previous"
         >
-          ←
+          <ChevronLeft className="w-8 h-8 transition-transform" />
         </button>
 
-        {/* Right arrow */}
+        {/* Right Button */}
         <button
           onClick={(e) => { e.stopPropagation(); navigate(1); }}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full hover:bg-white/25 border border-white/20 flex items-center justify-center text-white text-lg transition-colors backdrop-blur-sm"
-          style={{ cursor: "pointer" }}
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full flex items-center justify-center text-white/50 transition-all duration-300 hover:bg-white/10 hover:text-white hover:backdrop-blur-md active:scale-95 cursor-pointer group/btn"
           aria-label="Next"
         >
-          →
+          <ChevronRight className="w-8 h-8 transition-transform" />
         </button>
 
         {/* Cards row — perspective-preserving container */}
@@ -209,7 +208,7 @@ export default function HeroSection() {
                   scale: t.scale,
                   opacity: t.opacity,
                 }}
-                transition={{ type: "spring", stiffness: 290, damping: 32 }}
+                transition={{ type: "spring", stiffness: 120, damping: 32 }}
                 style={{
                   position: "absolute",
                   width: cardW,
@@ -293,36 +292,42 @@ function PlaceholderCard({ label }: { label: string }) {
       style={{
         width: "100%",
         height: "100%",
-        background: "linear-gradient(145deg, #0f172a 0%, #1e293b 55%, #0f172a 100%)",
+        // Multi-stop linear gradient for a metallic silver feel
+        background: "linear-gradient(135deg, #94a3b8 0%, #7f8ea3 25%, #8594a8 50%, #7f8ea3 75%, #94a3b8 100%)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: 14,
+        gap: 16,
+        position: "relative",
+        overflow: "hidden", // Clips the shimmer effect
       }}
     >
-      {/* Decorative icon placeholder */}
+
+      {/* Glossy Overlay: This creates the "Silver Shine" */}
       <div
         style={{
-          width: 52,
-          height: 52,
-          borderRadius: "50%",
-          background: "rgba(255,255,255,0.05)",
-          border: "1px solid rgba(255,255,255,0.12)",
+          position: "absolute",
+          top: "-50%",
+          left: "-50%",
+          width: "200%",
+          height: "200%",
+          background: "linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.10) 50%, transparent 55%)",
+          transform: "rotate(-20deg)",
+          pointerEvents: "none",
         }}
       />
-      <span
+
+      {/* Subtle Inset Border for a "Milled" Edge look */}
+      <div
         style={{
-          color: "rgba(255,255,255,0.45)",
-          fontSize: 14,
-          fontWeight: 500,
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
+          position: "absolute",
+          inset: "8px",
+          border: "1px solid rgba(255,255,255,0.12)",
+          borderRadius: "inherit",
+          pointerEvents: "none",
         }}
-      >
-        {label}
-      </span>
+      />
     </div>
   );
 }
-
