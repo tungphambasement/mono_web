@@ -16,14 +16,18 @@ const aboutMeSubLinks: { href: string; label: string; Icon: LucideIcon }[] = [
   { href: "/about?tab=projects", label: "Projects", Icon: FolderGit2 },
   { href: "/about?tab=activities", label: "Clubs & Activities", Icon: Package },
 ];
-
 export default function Navbar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isAboutMeActive = pathname === "/about";
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-transparent animate-fade-in">
+    <header
+      className="sticky top-0 z-40 w-full 
+      bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md
+      animate-fade-in
+      "
+    >
       <div className="mx-auto flex w-[90%] items-center justify-between px-6 py-4">
         {/* Brand */}
         <Link
@@ -86,7 +90,7 @@ export default function Navbar() {
 
             {/* Dropdown */}
             <div className="absolute z-50 top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 pointer-events-none group-hover/about:opacity-100 group-hover/about:pointer-events-auto transition-all duration-200 translate-y-1 group-hover/about:translate-y-0">
-              <div className="min-w-44 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-950/90 py-1.5 overflow-hidden">
+              <div className="min-w-44 rounded-lg border border-zinc-200/50 dark:border-zinc-800/50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-lg py-1.5 shadow-xl overflow-hidden">
                 {aboutMeSubLinks.map(({ href, label, Icon }) => {
                   const tabParam = new URL(href, "http://x").searchParams.get("tab");
                   const active = pathname === "/about" && searchParams.get("tab") === tabParam;
@@ -95,8 +99,8 @@ export default function Navbar() {
                       key={href}
                       href={href}
                       className={`group flex items-center gap-2 px-3 py-2 text-sm transition-colors duration-150 ${active
-                        ? "text-zinc-900 dark:text-zinc-100 font-medium bg-zinc-50 dark:bg-zinc-900"
-                        : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 dark:hover:text-zinc-100 dark:hover:bg-zinc-900"
+                        ? "text-zinc-900 dark:text-zinc-100 font-medium bg-zinc-900/5 dark:bg-white/5"
+                        : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 hover:bg-zinc-900/5 dark:hover:text-zinc-100 dark:hover:bg-white/5"
                         }`}
                     >
                       <Icon size={13} className="shrink-0" />

@@ -13,6 +13,7 @@ import Taskbar from "./components/Taskbar";
 import TerminalShortcut from "./components/TerminalShortcut";
 import { useTaskbarState } from "./hooks/useTaskbarState";
 import HeroSection from "./components/HeroSection";
+import SkillsSections from "./components/SkillsSections";
 
 
 type TerminalState = "visible" | "minimized" | "closed" | "closing";
@@ -158,13 +159,18 @@ export default function Home() {
             },
             ]
           } />
-          <div
-            className="flex flex-1 w-full items-center justify-center"
-            style={{
-              background: 'radial-gradient(ellipse 65% 55% at 50% 65%, #0c1e3d 0%, #04080f 55%, var(--background) 90%)'
-            }}>
-            <HeroSection />
+          {/* Hero section + skills */}
+          <div className="flex flex-col flex-1 w-full">
+            <div
+              className="flex w-full items-center justify-center"
+              style={{
+                background: 'radial-gradient(ellipse 65% 55% at 50% 65%, #0c1e3d 0%, #04080f 55%, var(--background) 90%)'
+              }}>
+              <HeroSection />
+            </div>
+            <SkillsSections />
           </div>
+
         </div>)
       }
     </div >
