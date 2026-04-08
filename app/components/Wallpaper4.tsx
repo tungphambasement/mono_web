@@ -38,7 +38,7 @@ export default function Wallpaper4() {
   useEffect(() => {
     if (!rectRef.current) return;
     const rect = rectRef.current.getBoundingClientRect();
-    const MAX_DIST = Math.sqrt(rect.width ** 2 + rect.height ** 2) * 0.35;
+    const MAX_DIST = Math.sqrt(rect.width ** 2 + rect.height ** 2) * 0.3;
 
     const screenCenterX = Math.round(rect.width / 2);
     const screenCenterY = Math.round(rect.height / 2);
@@ -257,7 +257,7 @@ export default function Wallpaper4() {
               '--dist': `${dot.dist}px`,
               '--scale-x': dot.hasTrail ? dot.dist / DOT_SIZE : 1,
               '--angle': `${dot.angle}deg`,
-              animation: `layer-anim-${dot.gen} ${TotalTime}s infinite`,
+              animation: `layer-anim-${dot.gen} ${TotalTime}s 1 forwards`,
               animationDelay: `${dot.delay}s`,
             } as CustomStyle}
           />

@@ -157,9 +157,7 @@ export default function Home() {
             },
             ]
           } />
-          <div className="relative z-10">
-            <HeroSection />
-          </div>
+          <HeroSection />
         </div>)
       }
     </div >
